@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">RestaurantHygieneChecker</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="advanced_search">Advanced Search</string>
+    <string name="local_search">Local Search</string>
+</resources>
