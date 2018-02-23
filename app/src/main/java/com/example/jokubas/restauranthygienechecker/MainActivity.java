@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +23,8 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -28,6 +32,14 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
@@ -36,11 +48,10 @@ import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private final int FINE_LOCATION_PERMISSION = 1;
     String json = "";
-    private TextView mTextMessage;
     private ArrayList<Establishments> establishments = new ArrayList<>();
     // longitude and latitude has to be inserted
     private String localSearchURL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
@@ -49,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private LocationListener locationListener;
     private ArrayAdapter estAdpt;
+    private SupportMapFragment mapFragment;
+    private GoogleMap map;
 
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -58,10 +71,10 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.map:
-                    mTextMessage.setText(R.string.title_home);
+                    showMapFragment();
                     return true;
                 case R.id.list:
-                    mTextMessage.setText(R.string.title_dashboard);
+                    hideMapFragment();
                     return true;
             }
             return false;
@@ -74,6 +87,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+//                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+//
+//        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+
         // adapter for the list view of the returned responses
         estAdpt = new ArrayAdapter(this, android.R.layout.simple_selectable_list_item, establishments);
         final ListView establView = findViewById(R.id.establishments);
@@ -81,9 +99,8 @@ public class MainActivity extends AppCompatActivity {
         final AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                Log.e("View", ((Establishments) estAdpt.getItem(position)).toString());
                 Establishments e = (Establishments) estAdpt.getItem(position);
-//                 //We need to get the instance of the LayoutInflater, use the context of this activity
+                //We need to get the instance of the LayoutInflater, use the context of this activity
                 LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
                 //Inflate the view from a predefined XML layout (no need for root id, using entire layout)
@@ -126,10 +143,9 @@ public class MainActivity extends AppCompatActivity {
 
         establView.setOnItemClickListener(itemClickListener);
 
-        mTextMessage = (TextView) findViewById(R.id.message);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -169,13 +185,19 @@ public class MainActivity extends AppCompatActivity {
         } else {
             attachLocManager();
         }
+        requestUpdate();
 
 
+        mapFragment = (SupportMapFragment)
+                getSupportFragmentManager().findFragmentById(R.id.mapView);
+        mapFragment.getMapAsync(this);
+        hideMapFragment();
+        hideSoftKeyboard();
     }
 
 
     public void onLocalSearchClick(View view) {
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        requestUpdate();
         Log.v("Print", String.format(localSearchURL, longitude, latitude));
         try {
             readUrl(String.format(localSearchURL, longitude, latitude));
@@ -238,5 +260,98 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void requestUpdate() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (locationManager
+                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                Location loc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (loc != null) {
+                    latitude = loc.getLatitude();
+                    longitude = loc.getLongitude();
+                }
+            }
+
+            if (locationManager
+                    .isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (loc != null) {
+                    latitude = loc.getLatitude();
+                    longitude = loc.getLongitude();
+                }
+            }
+
+
+        }
+
+    }
+
+    private void showMapFragment(){
+        onMapReady(map);
+        try {
+            FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
+            ft.show(mapFragment);
+            ft.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void hideMapFragment(){
+        try {
+            FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
+            ft.hide(mapFragment);
+            ft.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        map = googleMap;
+        googleMap.clear();
+        googleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("your new lcoation").snippet("and snippet").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+        for (Establishments e : establishments) {
+            googleMap.addMarker(new MarkerOptions().position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
+                    title(e.BusinessName).
+                    snippet(e.BusinessType +"\n" +
+                            e.AddressLine1 +"\n" +
+                            e.LocalAuthorityName +"\n" +
+                            e.LocalAuthorityEmailAddress +"\n" +
+                            e.RatingValue
+                    ).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+        }
+
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
+
+        // Showing the current location in Google Map
+        CameraPosition camPos = new CameraPosition.Builder()
+                .target(new LatLng(latitude, longitude))
+                .zoom(15)
+                .tilt(70)
+                .build();
+
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
+    }
+
+
+    /**
+     * Hides the soft keyboard
+     */
+    public void hideSoftKeyboard() {
+        if(getCurrentFocus()!=null) {
+            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
+    }
+
+    /**
+     * Shows the soft keyboard
+     */
+    public void showSoftKeyboard(View view) {
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        view.requestFocus();
+        inputMethodManager.showSoftInput(view, 0);
+    }
 }
 

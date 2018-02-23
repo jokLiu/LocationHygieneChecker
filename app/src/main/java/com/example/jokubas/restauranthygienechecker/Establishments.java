@@ -38,6 +38,8 @@ public class Establishments {
         String longitude;
         String latitude;
     }
+    Scores scores;
+    Geocode geocode;
 
     @Override
     public String toString(){
