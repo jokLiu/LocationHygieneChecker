@@ -1,10 +1,10 @@
 package com.example.jokubas.restauranthygienechecker;
 
 import android.Manifest;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -19,15 +19,18 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -50,11 +53,12 @@ import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
+    // longitude and latitude has to be inserted
+    private static final String LOCAL_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
+    private static final String SIMPLE_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?address=%s&pageSize=10&pageNumber=%d";
     private final int FINE_LOCATION_PERMISSION = 1;
     String json = "";
     private ArrayList<Establishments> establishments = new ArrayList<>();
-    // longitude and latitude has to be inserted
-    private String localSearchURL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
     private double longitude;
     private double latitude;
     private LocationManager locationManager;
@@ -62,11 +66,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayAdapter estAdpt;
     private SupportMapFragment mapFragment;
     private GoogleMap map;
-
+    private EditText searchBarView;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
@@ -87,10 +90,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
 //                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-//
+////
 //        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+//        getWindow().setStatusBarColor(getResources().getColor(android.R.color.transparent));
 
         // adapter for the list view of the returned responses
         estAdpt = new ArrayAdapter(this, android.R.layout.simple_selectable_list_item, establishments);
@@ -143,6 +148,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         establView.setOnItemClickListener(itemClickListener);
 
+        searchBarView = findViewById(R.id.searchView);
+        searchBarView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    onSimpleSearcClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -192,20 +210,52 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 getSupportFragmentManager().findFragmentById(R.id.mapView);
         mapFragment.getMapAsync(this);
         hideMapFragment();
-        hideSoftKeyboard();
     }
 
 
+    public void onSimpleSearcClick() {
+        hideSoftKeyboard();
+        String address = searchBarView.getText().toString();
+        Log.v("Print", String.format(SIMPLE_SEARCH_URL, address, 1));
+        try {
+            readUrl(String.format(SIMPLE_SEARCH_URL, address, 1));
+        } catch (Exception e) {
+//            Log.e("Exception", e.getMessage());
+            // TODO handle error state or no response being returned
+        }
+
+    }
+
     public void onLocalSearchClick(View view) {
         requestUpdate();
-        Log.v("Print", String.format(localSearchURL, longitude, latitude));
+        Log.v("Print", String.format(LOCAL_SEARCH_URL, longitude, latitude));
         try {
-            readUrl(String.format(localSearchURL, longitude, latitude));
+            readUrl(String.format(LOCAL_SEARCH_URL, longitude, latitude));
         } catch (Exception e) {
 //            Log.e("Exception", e.getMessage());
             // TODO handle error state or no response being returned
         }
     }
+
+    public void onAdvancedSearchClieck(View view){
+        hideMapFragment();
+//         Create new fragment and transaction
+        Fragment newFragment = new AdvancedSearchFragment();
+        FragmentTransaction transaction = mapFragment.getFragmentManager().beginTransaction();
+
+// Replace whatever is in the fragment_container view with this fragment,
+// and add the transaction to the back stack if needed
+        transaction.replace(mapFragment.getId(), newFragment);
+        transaction.addToBackStack(null);
+
+        FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
+        ft.show(mapFragment);
+        ft.commit();
+
+// Commit the transaction
+        transaction.commit();
+    }
+
 
     private void readUrl(String urlString) throws Exception {
 
@@ -216,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new TextHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String response) {
+                        Log.v("Response", response);
                         Gson gson = new Gson();
                         Response result = gson.fromJson(response, Response.class);
                         populateList(result);
@@ -233,6 +284,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         establishments.clear();
         establishments.addAll(response.establishments);
         estAdpt.notifyDataSetChanged();
+        onMapReady(map);
     }
 
     @Override
@@ -285,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void showMapFragment(){
+    private void showMapFragment() {
         onMapReady(map);
         try {
             FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
@@ -296,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void hideMapFragment(){
+    private void hideMapFragment() {
         try {
             FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
             ft.hide(mapFragment);
@@ -314,10 +366,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         for (Establishments e : establishments) {
             googleMap.addMarker(new MarkerOptions().position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
                     title(e.BusinessName).
-                    snippet(e.BusinessType +"\n" +
-                            e.AddressLine1 +"\n" +
-                            e.LocalAuthorityName +"\n" +
-                            e.LocalAuthorityEmailAddress +"\n" +
+                    snippet(e.BusinessType + "\n" +
+                            e.AddressLine1 + "\n" +
+                            e.LocalAuthorityName + "\n" +
+                            e.LocalAuthorityEmailAddress + "\n" +
                             e.RatingValue
                     ).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
         }
@@ -339,9 +391,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Hides the soft keyboard
      */
     public void hideSoftKeyboard() {
-        if(getCurrentFocus()!=null) {
-            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        if (getCurrentFocus() != null) {
+            InputMethodManager inputManager = (InputMethodManager)
+                    getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                    InputMethodManager.HIDE_NOT_ALWAYS);
         }
     }
 

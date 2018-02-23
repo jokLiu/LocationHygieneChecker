@@ -5,12 +5,12 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:focusableInTouchMode="true"
     tools:context="com.example.jokubas.restauranthygienechecker.MainActivity">
 
 
     <EditText
-        android:id="@+id/latlongLocation"
+        android:id="@+id/searchView"
         android:layout_width="355dp"
         android:layout_height="50dp"
         android:layout_alignParentBottom="true"
@@ -26,9 +26,12 @@
         android:paddingRight="5dp"
         android:paddingTop="5dp"
         android:textColor="#000000"
+        android:inputType="text"
+        android:imeOptions="actionSearch"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
     <ListView
         android:id="@+id/establishments"
@@ -47,25 +50,24 @@
         android:id="@+id/navigation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="0dp"
-        android:layout_marginStart="0dp"
         android:background="?android:attr/windowBackground"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:menu="@menu/navigation" />
 
     <Button
         android:id="@+id/button"
-        android:elevation="2dp"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="28dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:background="@drawable/button"
-        android:text="@string/local_search"
+        android:elevation="2dp"
         android:onClick="onLocalSearchClick"
+        android:text="@string/local_search"
         app:layout_constraintBottom_toTopOf="@+id/navigation"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.693"
@@ -73,12 +75,13 @@
 
     <Button
         android:id="@+id/button2"
-        android:elevation="2dp"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="28dp"
         android:layout_marginStart="36dp"
         android:background="@drawable/button"
+        android:elevation="2dp"
+        android:onClick="onAdvancedSearchClieck"
         android:text="@string/advanced_search"
         app:layout_constraintBottom_toTopOf="@+id/navigation"
         app:layout_constraintStart_toStartOf="parent" />
@@ -87,15 +90,15 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/mapView"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="435dp"
-        android:layout_height="632dp"
-        android:layout_marginBottom="55dp"
+        android:layout_width="433dp"
+        android:layout_height="682dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.947" />
+        app:layout_constraintVertical_bias="1.0" />
+
+
 
 
 </android.support.constraint.ConstraintLayout>
