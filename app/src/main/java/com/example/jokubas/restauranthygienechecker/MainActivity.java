@@ -1,6 +1,7 @@
 package com.example.jokubas.restauranthygienechecker;
 
 import android.Manifest;
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // longitude and latitude has to be inserted
     private static final String LOCAL_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
     private static final String SIMPLE_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?address=%s&pageSize=10&pageNumber=%d";
+    private static final String ADVANCED_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?address=%s&pageSize=10&pageNumber=%d";
     private final int FINE_LOCATION_PERMISSION = 1;
     String json = "";
     private ArrayList<Establishments> establishments = new ArrayList<>();
@@ -238,22 +240,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void onAdvancedSearchClieck(View view){
-        hideMapFragment();
-//         Create new fragment and transaction
-        Fragment newFragment = new AdvancedSearchFragment();
-        FragmentTransaction transaction = mapFragment.getFragmentManager().beginTransaction();
+//        hideMapFragment();
+        Intent intent = new Intent(MainActivity.this, AdvancedSearchActivity.class);
+        startActivity(intent);
 
-// Replace whatever is in the fragment_container view with this fragment,
-// and add the transaction to the back stack if needed
-        transaction.replace(mapFragment.getId(), newFragment);
-        transaction.addToBackStack(null);
 
-        FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
-        ft.show(mapFragment);
-        ft.commit();
-
-// Commit the transaction
-        transaction.commit();
+////         Create new fragment and transaction
+//        Fragment newFragment = new AdvancedSearchFragment();
+//        FragmentTransaction transaction = mapFragment.getFragmentManager().beginTransaction();
+//
+//// Replace whatever is in the fragment_container view with this fragment,
+//// and add the transaction to the back stack if needed
+//        transaction.replace(mapFragment.getId(), newFragment);
+//        transaction.addToBackStack(null);
+//
+//        FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
+//        ft.show(mapFragment);
+//        ft.commit();
+//
+//// Commit the transaction
+//        transaction.commit();
     }
 
 
@@ -341,6 +347,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         onMapReady(map);
         try {
             FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
+            ft.setCustomAnimations(android.R.animator.fade_in,
+                    android.R.animator.fade_out);
             ft.show(mapFragment);
             ft.commit();
         } catch (Exception e) {
@@ -387,6 +395,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
+
     /**
      * Hides the soft keyboard
      */
@@ -399,13 +408,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    /**
-     * Shows the soft keyboard
-     */
-    public void showSoftKeyboard(View view) {
-        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        view.requestFocus();
-        inputMethodManager.showSoftInput(view, 0);
-    }
 }
 
