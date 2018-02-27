@@ -1,5 +1,6 @@
 package com.example.jokubas.restauranthygienechecker;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -25,6 +26,19 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     private static final String BUSINESS_TYPES_URL = "http://api.ratings.food.gov.uk/BusinessTypes";
     private static final String REGIONS_URL = "http://api.ratings.food.gov.uk/Regions";
     private static final String AUTHORITIES_URL = "http://api.ratings.food.gov.uk/Authorities";
+    // TODO check maxDistanceLimit
+    private static final String ADVANCED_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?"+
+            "name=%s&businessTypeId=%d&"+
+            "schemeTypeKey=FHRS&ratingKey=%s&ratingOperatorKey=GreaterThanOrEqual&"+
+            "localAuthorityId=%d&"+
+            "sortOptionKey=%s&pageNumber=%d&pageSize=%d";
+
+    private static final String ADVANCED_SEARCH_RADIUS_URL = "http://api.ratings.food.gov.uk/Establishments?"+
+            "name=%s&"+
+            "maxDistanceLimit=%d&businessTypeId=%d&"+
+            "schemeTypeKey=FHRS&ratingKey=%s&ratingOperatorKey=GreaterThanOrEqual&"+
+            "sortOptionKey=%s&pageNumber=%d&pageSize=%d&";//+
+           // "longitude=%f&latitude=%f&";
     private List<String> businessTypesSpinner = new ArrayList<>();
     private List<String> regionsSpinner = new ArrayList<>();
     private List<String> authoritiesSpinner = new ArrayList<>();
@@ -79,7 +93,44 @@ public class AdvancedSearchActivity extends AppCompatActivity {
 
     }
 
+
     public void onClickSearch(View view) {
+        String apiQuery = null;
+        Intent intent = new Intent(AdvancedSearchActivity.this, MainActivity.class);
+        String name = businessNameView.getText().toString();
+        int typeID = 0;
+        String type = businessTypesSpinner.get(businessTypeView.getSelectedItemPosition());
+        for(BusinessTypes.businessTypes b : businessTypesStorage)
+            typeID = b.BusinessTypeName.equals(type) ? b.BusinessTypeId : typeID;
+
+        String rating = ratingHighView.getSelectedItem().toString();
+        int radius = -1;
+        int authID = -1;
+        //use location
+        // TODO CHECK WHETHER LOCATION ACTUALLY EXISTS AND IS ENABLED
+        if(checkBox.isChecked()){
+            radius = Integer.valueOf(radiusView.getSelectedItem().toString());
+            intent.putExtra("check", false);
+            apiQuery = String.format(ADVANCED_SEARCH_RADIUS_URL,name,radius, typeID,rating, "distance",1,20);
+            Log.e("QUERY",apiQuery);
+            intent.putExtra("check", false);
+        }
+        // use authority and region
+        else{
+            String authName = authoritiesSpinner.get(authoritiesView.getSelectedItemPosition());
+            for(AuthoritiesWrapper.Authorities a : authoritiesStorage) {
+                authID = a.Name.equals(authName) ? a.LocalAuthorityId : authID;
+//                break;
+            }
+            apiQuery = String.format(ADVANCED_SEARCH_URL,name,typeID,rating, authID, "rating",1,20);
+            Log.e("QUERY",apiQuery);
+            intent.putExtra("check", true);
+        }
+
+        intent.putExtra("query", apiQuery);
+        startActivity(intent);
+        finish();
+
 
     }
 

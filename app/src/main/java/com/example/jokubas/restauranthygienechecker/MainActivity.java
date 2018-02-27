@@ -1,10 +1,9 @@
 package com.example.jokubas.restauranthygienechecker;
 
 import android.Manifest;
-import android.content.Intent;
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
@@ -25,7 +24,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -57,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // longitude and latitude has to be inserted
     private static final String LOCAL_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
     private static final String SIMPLE_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?address=%s&pageSize=10&pageNumber=%d";
-    private static final String ADVANCED_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?address=%s&pageSize=10&pageNumber=%d";
     private final int FINE_LOCATION_PERMISSION = 1;
     String json = "";
     private ArrayList<Establishments> establishments = new ArrayList<>();
@@ -91,6 +88,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        Intent intent = getIntent();
+        boolean check = intent.getBooleanExtra("check", false);
+        String query = intent.getStringExtra("query");
+
 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -212,6 +215,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 getSupportFragmentManager().findFragmentById(R.id.mapView);
         mapFragment.getMapAsync(this);
         hideMapFragment();
+
+
+        if (query != null) { // use boolean from the other intent
+            if (!check) {
+                query = query + String.format("longitude=%f&latitude=%f", longitude, latitude);
+            }
+            try {
+                readUrl(query);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -239,27 +254,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public void onAdvancedSearchClieck(View view){
-//        hideMapFragment();
+    public void onAdvancedSearchClieck(View view) {
         Intent intent = new Intent(MainActivity.this, AdvancedSearchActivity.class);
         startActivity(intent);
-
-
-////         Create new fragment and transaction
-//        Fragment newFragment = new AdvancedSearchFragment();
-//        FragmentTransaction transaction = mapFragment.getFragmentManager().beginTransaction();
-//
-//// Replace whatever is in the fragment_container view with this fragment,
-//// and add the transaction to the back stack if needed
-//        transaction.replace(mapFragment.getId(), newFragment);
-//        transaction.addToBackStack(null);
-//
-//        FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
-//        ft.show(mapFragment);
-//        ft.commit();
-//
-//// Commit the transaction
-//        transaction.commit();
     }
 
 
@@ -393,7 +390,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
     }
-
 
 
     /**
