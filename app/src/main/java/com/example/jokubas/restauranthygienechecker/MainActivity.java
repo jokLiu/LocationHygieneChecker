@@ -1,7 +1,6 @@
 package com.example.jokubas.restauranthygienechecker;
 
 import android.Manifest;
-import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,15 +15,12 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -37,16 +33,13 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -55,7 +48,13 @@ import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -82,9 +81,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.map:
+                    switchHygieneAndDate(false);
+                    switchLocation(false);
                     showMapFragment();
                     return true;
                 case R.id.list:
+                    if (establishments != null && establishments.size() > 0) {
+                        switchHygieneAndDate(true);
+                        switchLocation(true);
+                    }
                     hideMapFragment();
                     return true;
             }
@@ -135,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //Get the devices screen density to calculate correct pixel sizes
                 float density = MainActivity.this.getResources().getDisplayMetrics().density;
                 // create a focusable PopupWindow with the given layout and correct size
-                final PopupWindow pw = new PopupWindow(layout, (int) density * 400, (int) density * 400, true);
+                final PopupWindow pw = new PopupWindow(layout, (int) density * 400, (int) density * 600, true);
                 //Button to close the pop-up
                 ((Button) layout.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
@@ -236,6 +241,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 e.printStackTrace();
             }
         }
+        switchLoadingGif();
+        switchHygieneAndDate(false);
+        switchLocation(false);
     }
 
 
@@ -270,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void readUrl(String urlString) throws Exception {
-
+        switchLoadingGif();
         AsyncHttpClient client = new AsyncHttpClient();
         client.addHeader("x-api-version", "2");
         client.addHeader("Accept", "application/json");
@@ -278,6 +286,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new TextHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String response) {
+                        switchLoadingGif();
                         Log.v("Response", response);
                         Gson gson = new Gson();
                         Response result = gson.fromJson(response, Response.class);
@@ -286,6 +295,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
+                        switchLoadingGif();
                         // TODO figure out later
 //                        Log.v("JSON",response);
                     }
@@ -296,6 +306,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         establishments.clear();
         establishments.addAll(response.establishments);
         estAdpt.notifyDataSetChanged();
+        switchLocation(true);
+        switchHygieneAndDate(true);
         onMapReady(map);
     }
 
@@ -390,16 +402,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+
         map = googleMap;
         googleMap.clear();
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         MarkerOptions myPosition = new MarkerOptions();
-        if(latitude != 0f && longitude != 0) {
+        if (latitude != 0f && longitude != 0) {
             myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
             googleMap.addMarker(myPosition);
             builder.include(myPosition.getPosition());
         }
-
 
         for (Establishments e : establishments) {
             MarkerOptions option = new MarkerOptions();
@@ -410,35 +422,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             builder.include(option.getPosition());
         }
 
-
-
-
-
         CameraUpdate camUpd = null;
-        if(establishments.size() == 0 && myPosition.getPosition() == null) camUpd = CameraUpdateFactory.newLatLngZoom(
-                new MarkerOptions().position(new LatLng (51.5074, 0.1278)).getPosition(), 8F);
-        else if(establishments.size() == 0) camUpd = CameraUpdateFactory.newLatLngZoom(
-                new MarkerOptions().position(new LatLng(latitude, longitude)).getPosition(), 12F);
+        if (establishments.size() == 0 && myPosition.getPosition() == null)
+            camUpd = CameraUpdateFactory.newLatLngZoom(
+                    new MarkerOptions().position(new LatLng(51.5074, 0.1278)).getPosition(), 10F);
+        else if (establishments.size() == 0) camUpd = CameraUpdateFactory.newLatLngZoom(
+                new MarkerOptions().position(new LatLng(latitude, longitude)).getPosition(), 10F);
         else {
-            int padding = 30;
+            int padding = 0;
             LatLngBounds bounds = builder.build();
-            camUpd = CameraUpdateFactory.newLatLngBounds(bounds,padding);
+            camUpd = CameraUpdateFactory.newLatLngBounds(bounds, padding);
         }
 
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
 
-//        // Showing the current location in Google Map
-//        CameraPosition camPos = new CameraPosition.Builder()
-//                .target(new LatLng(latitude, longitude))
-//                .zoom(15)
-//                .tilt(70)
-//                .build();
-
-        UiSettings settings = googleMap.getUiSettings();
-        settings.setCompassEnabled(true);
+//        UiSettings settings = googleMap.getUiSettings();
+        map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
-        googleMap.setPadding(80,250,80,350);
-        googleMap.animateCamera(camUpd);
+        googleMap.setPadding(80, 250, 80, 350);
+        try {
+            googleMap.animateCamera(camUpd);
+        } catch (Exception e) {
+        }
 
         map.setInfoWindowAdapter(new MapInfoAdapter(MainActivity.this, establishments, map));
         map.setOnMarkerClickListener(this);
@@ -458,11 +462,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    /** Called when the user clicks a marker. */
+    /**
+     * Called when the user clicks a marker.
+     */
     @Override
     public boolean onMarkerClick(final Marker marker) {
         marker.showInfoWindow();
-
 
 
         // Return false to indicate that we have not consumed the event and that we wish
@@ -471,6 +476,93 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return true;
     }
 
+    private void switchLoadingGif() {
+        pl.droidsonroids.gif.GifImageView world = findViewById(R.id.world);
+        world.setVisibility(Math.abs(world.getVisibility() - View.GONE));
+    }
+
+    private void switchHygieneAndDate(boolean on) {
+        Button hygiene = findViewById(R.id.hygiene_sort);
+        Button date = findViewById(R.id.date_sort);
+
+        if (on) {
+            hygiene.setVisibility(View.VISIBLE);
+            date.setVisibility(View.VISIBLE);
+        } else {
+            hygiene.setVisibility(View.GONE);
+            date.setVisibility(View.GONE);
+        }
+    }
+
+
+    private void switchLocation(boolean on) {
+        Button location = findViewById(R.id.location_sort);
+        if (on)
+            location.setVisibility(View.VISIBLE);
+        else location.setVisibility(View.GONE);
+    }
+
+    public void onHygieneSortClick(View view){
+        Collections.sort(establishments, new Comparator<Establishments>() {
+            @Override
+            public int compare(Establishments e1, Establishments e2) {
+                String v1 = e1.RatingValue;
+                String v2 = e2.RatingValue;
+                if(checkStringToInt(v1) && checkStringToInt(v2))
+                    return  Integer.valueOf(e2.RatingValue) - Integer.valueOf(e1.RatingValue);
+                else if(!checkStringToInt(v1) && !checkStringToInt(v2))
+                    return 0;
+                else if(!checkStringToInt(v1))
+                    return 1;
+                else return -1;
+            }
+        });
+        estAdpt.notifyDataSetChanged();
+    }
+
+    // TODO check if this actually works
+    public void onLocationSortClick(View view){
+        Collections.sort(establishments, new Comparator<Establishments>() {
+            @Override
+            public int compare(Establishments e1, Establishments e2) {
+                return (e1.Distance > e2.Distance) ? 1 : ((e1.Distance == e2.Distance) ? 0 : -1);
+            }
+        });
+        estAdpt.notifyDataSetChanged();
+    }
+
+    // TODO check if this actually works
+    public void onDateSortClick(View view){
+        Collections.sort(establishments, new Comparator<Establishments>() {
+            @Override
+            public int compare(Establishments e1, Establishments e2) {
+
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                Date date1 = null,  date2 = null;
+                try {
+                    date1 = format.parse(e1.RatingDate);
+                } catch (ParseException e) {
+                    return -1;
+                }
+                try {
+                    date2 = format.parse(e2.RatingDate);
+                } catch (ParseException e) {
+                    return 1;
+                }
+                return date1.compareTo(date2);
+            }
+        });
+        estAdpt.notifyDataSetChanged();
+    }
+
+    private boolean checkStringToInt(String value){
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
 }
 

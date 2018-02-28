@@ -63,7 +63,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         // Views
         businessNameView = findViewById(R.id.business_name);
         businessTypeView = findViewById(R.id.type_of_business);
-        ratingLowView = findViewById(R.id.rating_low);
+//        ratingLowView = findViewById(R.id.rating_low);
         ratingHighView = findViewById(R.id.rating_high);
         checkBox = findViewById(R.id.current_loc_check_box);
         radiusView = findViewById(R.id.radius_spinner);

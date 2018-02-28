@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:focusableInTouchMode="true"
-    tools:context="com.example.jokubas.restauranthygienechecker.MainActivity">
+    tools:context="com.example.jokubas.restauranthygienechecker.MainActivity"
+    android:background="@drawable/back">
 
 
     <EditText
@@ -38,11 +39,11 @@
     <ListView
         android:id="@+id/establishments"
         android:layout_width="368dp"
-        android:layout_height="350dp"
+        android:layout_height="393dp"
         android:layout_marginBottom="60dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="60dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -96,9 +97,76 @@
         android:layout_height="682dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.0" />
+
+    <pl.droidsonroids.gif.GifImageView
+        android:id="@+id/world"
+        android:layout_width="62dp"
+        android:layout_height="62dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/transparent"
+        android:elevation="2dp"
+        android:src="@drawable/world2"
+        app:layout_constraintBottom_toTopOf="@+id/navigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.937"
+        app:layout_constraintStart_toStartOf="@+id/establishments"
+        app:layout_constraintTop_toBottomOf="@+id/searchView"
+        app:layout_constraintVertical_bias="0.002" />
+
+    <Button
+        android:id="@+id/hygiene_sort"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginEnd="250dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="12dp"
+        android:elevation="2dp"
+        android:onClick="onHygieneSortClick"
+        android:text="Hygiene"
+        android:background="@drawable/button_sort"
+        app:layout_constraintBottom_toTopOf="@+id/establishments"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/searchView"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/date_sort"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginEnd="50dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="12dp"
+        android:elevation="2dp"
+        android:onClick="onDateSortClick"
+        android:background="@drawable/button_sort"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/searchView"
+        android:text="Date" />
+
+    <Button
+        android:id="@+id/location_sort"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:text="Location"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="170dp"
+        android:layout_marginTop="12dp"
+        android:elevation="2dp"
+        android:onClick="onLocationSortClick"
+        android:background="@drawable/button_sort"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/searchView" />
+
 
     <!--<fragment xmlns:android="http://schemas.android.com/apk/res/android"-->
         <!--xmlns:tools="http://schemas.android.com/tools"-->

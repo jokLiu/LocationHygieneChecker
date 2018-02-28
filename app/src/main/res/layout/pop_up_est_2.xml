@@ -12,9 +12,8 @@
 
     <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/scrollView2"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="match_parent"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -102,7 +101,6 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1.5"
                     android:inputType="text"
-                    android:entries="@array/ratings"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
             </LinearLayout>
@@ -126,8 +124,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.5"
+                    android:entries="@array/ratings"
                     android:inputType="text"
-                    android:entries="@array/radius"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
             </LinearLayout>
@@ -180,21 +178,4 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <Button
-        android:id="@+id/search"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:onClick="onClickSearch"
-        android:text="Button"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scrollView2" />
-
-
 </android.support.constraint.ConstraintLayout>
