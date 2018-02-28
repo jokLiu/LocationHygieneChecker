@@ -1,6 +1,7 @@
 package com.example.jokubas.restauranthygienechecker;
 
 import android.Manifest;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,12 +16,15 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,14 +37,19 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
@@ -50,7 +59,7 @@ import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     // longitude and latitude has to be inserted
     private static final String LOCAL_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
@@ -290,15 +299,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         onMapReady(map);
     }
 
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+//        switch (requestCode) {
+//            case FINE_LOCATION_PERMISSION: {
+//                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    attachLocManager();
+//                } else {
+//                }
+//                return;
+//            }
+//        }
+//
+//
+//    }
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case FINE_LOCATION_PERMISSION: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    attachLocManager();
-                } else {
-                }
-                return;
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == FINE_LOCATION_PERMISSION) {
+            if (permissions.length == 1 &&
+                    permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                map.setMyLocationEnabled(true);
+
+            } else {
+                // Permission was denied. Display an error message.
             }
         }
     }
@@ -367,28 +392,56 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
         googleMap.clear();
-        googleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("your new lcoation").snippet("and snippet").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        MarkerOptions myPosition = new MarkerOptions();
+        if(latitude != 0f && longitude != 0) {
+            myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+            googleMap.addMarker(myPosition);
+            builder.include(myPosition.getPosition());
+        }
+
+
         for (Establishments e : establishments) {
-            googleMap.addMarker(new MarkerOptions().position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
+            MarkerOptions option = new MarkerOptions();
+            googleMap.addMarker(option.position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
                     title(e.BusinessName).
-                    snippet(e.BusinessType + "\n" +
-                            e.AddressLine1 + "\n" +
-                            e.LocalAuthorityName + "\n" +
-                            e.LocalAuthorityEmailAddress + "\n" +
-                            e.RatingValue
-                    ).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+                    snippet(e.BusinessType).
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+            builder.include(option.getPosition());
+        }
+
+
+
+
+
+        CameraUpdate camUpd = null;
+        if(establishments.size() == 0 && myPosition.getPosition() == null) camUpd = CameraUpdateFactory.newLatLngZoom(
+                new MarkerOptions().position(new LatLng (51.5074, 0.1278)).getPosition(), 8F);
+        else if(establishments.size() == 0) camUpd = CameraUpdateFactory.newLatLngZoom(
+                new MarkerOptions().position(new LatLng(latitude, longitude)).getPosition(), 12F);
+        else {
+            int padding = 30;
+            LatLngBounds bounds = builder.build();
+            camUpd = CameraUpdateFactory.newLatLngBounds(bounds,padding);
         }
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
 
-        // Showing the current location in Google Map
-        CameraPosition camPos = new CameraPosition.Builder()
-                .target(new LatLng(latitude, longitude))
-                .zoom(15)
-                .tilt(70)
-                .build();
+//        // Showing the current location in Google Map
+//        CameraPosition camPos = new CameraPosition.Builder()
+//                .target(new LatLng(latitude, longitude))
+//                .zoom(15)
+//                .tilt(70)
+//                .build();
 
-        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
+        UiSettings settings = googleMap.getUiSettings();
+        settings.setCompassEnabled(true);
+        map.getUiSettings().setMapToolbarEnabled(true);
+        googleMap.setPadding(80,250,80,350);
+        googleMap.animateCamera(camUpd);
+
+        map.setInfoWindowAdapter(new MapInfoAdapter(MainActivity.this, establishments, map));
+        map.setOnMarkerClickListener(this);
     }
 
 
@@ -403,6 +456,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     InputMethodManager.HIDE_NOT_ALWAYS);
         }
     }
+
+
+    /** Called when the user clicks a marker. */
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+        marker.showInfoWindow();
+
+
+
+        // Return false to indicate that we have not consumed the event and that we wish
+        // for the default behavior to occur (which is for the camera to move such that the
+        // marker is centered and for the marker's info window to open, if it has one).
+        return true;
+    }
+
 
 }
 

@@ -1,15 +1,39 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <!--<item name="android:windowDrawsSystemBarBackgrounds">true</item>-->
         <!--<item name="android:windowTranslucentNavigation">true</item>-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <!--Floating label text style-->
+    <style name="MyHintText" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/pink</item>
+    </style>
+
+    <!--Input field style-->
+    <style name="MyEditText" parent="Theme.AppCompat.Light">
+        <item name="colorControlNormal">@color/indigo</item>
+        <item name="colorControlActivated">@color/pink</item>
+    </style>
+
+    <style name="SearchView">
+        <item name="floatingSearch_backgroundColor"></item>
+        <item name="floatingSearch_viewSearchInputTextColor"></item>
+        <item name="floatingSearch_viewSuggestionItemTextColor"></item>
+        <item name="floatingSearch_hintTextColor"></item>
+        <item name="floatingSearch_dividerColor"></item>
+        <item name="floatingSearch_clearBtnColor"></item>
+        <item name="floatingSearch_leftActionColor"></item>
+        <item name="floatingSearch_menuItemIconColor"></item>
+        <item name="floatingSearch_suggestionRightIconColor"></item>
+        <item name="floatingSearch_actionMenuOverflowColor"></item>
     </style>
 
 </resources>

@@ -6,39 +6,60 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:focusableInTouchMode="true"
+    android:theme="@android:style/ThemeOverlay.Material.Light"
     tools:context="com.example.jokubas.restauranthygienechecker.AdvancedSearchActivity">
 
 
-    <EditText
-        android:id="@+id/business_name"
-        android:layout_width="300dp"
-        android:layout_height="40dp"
-        android:layout_marginBottom="380dp"
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/textInputLayout"
+        android:layout_width="322dp"
+        android:layout_height="43dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:background="@android:color/darker_gray"
-        android:text="TextView"
+        app:hintTextAppearance="@style/MyHintText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.306"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.159">
+
+        <EditText
+            android:id="@+id/business_name"
+            android:layout_width="300dp"
+            android:layout_height="40dp"
+            android:theme="@style/MyEditText"
+            android:hint="Business Name"
+            app:hintTextAppearance="@style/MyHintText"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+
+    </android.support.design.widget.TextInputLayout>
+
 
     <Spinner
         android:id="@+id/type_of_business"
-        android:layout_width="300dp"
-        android:layout_height="50dp"
+        android:layout_width="321dp"
+        android:layout_height="39dp"
         android:layout_marginBottom="320dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:background="@android:color/darker_gray"
-        android:textColor="@android:color/black"
+        android:theme="@android:style/ThemeOverlay.Material.Dark"
+        android:hint="Business Name"
+        android:spinnerMode="dropdown"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.297"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/business_name" />
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayout"
+        app:layout_constraintVertical_bias="0.078" />
 
     <Spinner
         android:id="@+id/rating_low"

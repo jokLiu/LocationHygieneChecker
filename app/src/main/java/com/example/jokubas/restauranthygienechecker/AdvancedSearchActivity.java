@@ -95,7 +95,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
 
 
     public void onClickSearch(View view) {
-        String apiQuery = null;
+        String apiQuery = "";
         Intent intent = new Intent(AdvancedSearchActivity.this, MainActivity.class);
         String name = businessNameView.getText().toString();
         int typeID = 0;
