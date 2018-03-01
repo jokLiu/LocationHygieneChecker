@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // longitude and latitude has to be inserted
     private final int FINE_LOCATION_PERMISSION = 1;
-    String json = "";
     private ArrayList<Establishments> establishments = new ArrayList<>();
     private double longitude;
     private double latitude;
@@ -106,10 +105,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Intent intent = getIntent();
         QueryData queryData = (QueryData) intent.getSerializableExtra("query_data");
-
-//        boolean check = intent.getBooleanExtra("query_data", false);
-//        String query = intent.getStringExtra("query");
-
 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -317,11 +312,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (establishments.size() == 0) noResultsToast();
         switchLocation(true);
         switchHygieneAndDate(true);
+        for(Establishments e : establishments)
+            if(e.geocode.longitude ==null || e.geocode.latitude == null) {
+//                readUrl(String.format(Locale.UK, SearchQueries.GEOCODE_POSTCODE_TO_LATLANG_URL, e.PostCode);
+                Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
+            }
         onMapReady(map);
 
 
-        for(Establishments e : establishments)
-            Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
+
+
     }
 
 //    @Override
@@ -424,6 +424,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    // TODO fix this method
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
@@ -432,13 +433,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         MarkerOptions myPosition = new MarkerOptions();
         if (latitude != 0f && longitude != 0) {
-            myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+            myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
             googleMap.addMarker(myPosition);
             builder.include(myPosition.getPosition());
         }
 
         int i=0;
+        // TODO Big Johns in simple search causes error
         for (Establishments e : establishments) {
+            if(e.geocode.longitude ==null || e.geocode.latitude == null) continue;
             MarkerOptions option = new MarkerOptions();
             googleMap.addMarker(option.position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
                     title(e.BusinessName).
@@ -460,8 +464,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             camUpd = CameraUpdateFactory.newLatLngBounds(bounds, padding);
         }
 
-
-//        UiSettings settings = googleMap.getUiSettings();
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
         googleMap.setPadding(80, 250, 80, 350);
@@ -496,9 +498,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         marker.showInfoWindow();
 
 
-        // Return false to indicate that we have not consumed the event and that we wish
-        // for the default behavior to occur (which is for the camera to move such that the
-        // marker is centered and for the marker's info window to open, if it has one).
+        // Return true to indicate that we have consumed the event and that we don't want
+        // for the default behavior to occur.
         return true;
     }
 
@@ -596,7 +597,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         toast.setGravity(Gravity.CENTER, 0, 0);
         LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.toast, null);
-//
         toast.setView(view);
         toast.show();
     }
