@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -33,6 +34,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -54,7 +56,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -296,6 +297,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     @Override
                     public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
                         switchLoadingGif();
+                        Log.e("TOAST", "TPAST");
                         // TODO figure out later
 //                        Log.v("JSON",response);
                     }
@@ -306,6 +308,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         establishments.clear();
         establishments.addAll(response.establishments);
         estAdpt.notifyDataSetChanged();
+        if (establishments.size() == 0) noResultsToast();
         switchLocation(true);
         switchHygieneAndDate(true);
         onMapReady(map);
@@ -502,17 +505,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         else location.setVisibility(View.GONE);
     }
 
-    public void onHygieneSortClick(View view){
+    public void onHygieneSortClick(View view) {
         Collections.sort(establishments, new Comparator<Establishments>() {
             @Override
             public int compare(Establishments e1, Establishments e2) {
                 String v1 = e1.RatingValue;
                 String v2 = e2.RatingValue;
-                if(checkStringToInt(v1) && checkStringToInt(v2))
-                    return  Integer.valueOf(e2.RatingValue) - Integer.valueOf(e1.RatingValue);
-                else if(!checkStringToInt(v1) && !checkStringToInt(v2))
+                if (checkStringToInt(v1) && checkStringToInt(v2))
+                    return Integer.valueOf(e2.RatingValue) - Integer.valueOf(e1.RatingValue);
+                else if (!checkStringToInt(v1) && !checkStringToInt(v2))
                     return 0;
-                else if(!checkStringToInt(v1))
+                else if (!checkStringToInt(v1))
                     return 1;
                 else return -1;
             }
@@ -521,7 +524,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // TODO check if this actually works
-    public void onLocationSortClick(View view){
+    public void onLocationSortClick(View view) {
         Collections.sort(establishments, new Comparator<Establishments>() {
             @Override
             public int compare(Establishments e1, Establishments e2) {
@@ -532,13 +535,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // TODO check if this actually works
-    public void onDateSortClick(View view){
+    public void onDateSortClick(View view) {
         Collections.sort(establishments, new Comparator<Establishments>() {
             @Override
             public int compare(Establishments e1, Establishments e2) {
 
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-                Date date1 = null,  date2 = null;
+                Date date1 = null, date2 = null;
                 try {
                     date1 = format.parse(e1.RatingDate);
                 } catch (ParseException e) {
@@ -555,13 +558,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         estAdpt.notifyDataSetChanged();
     }
 
-    private boolean checkStringToInt(String value){
+    private boolean checkStringToInt(String value) {
         try {
             Integer.parseInt(value);
             return true;
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    private void noResultsToast() {
+        Toast toast = new Toast(getBaseContext());
+        toast.setDuration(Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.toast, null);
+//
+        toast.setView(view);
+        toast.show();
     }
 
 }
