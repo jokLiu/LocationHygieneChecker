@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -36,6 +35,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.jokubas.restauranthygienechecker.util.SearchQueries;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -56,14 +56,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Locale;
 
 import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     // longitude and latitude has to be inserted
-    private static final String LOCAL_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
-    private static final String SIMPLE_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?address=%s&pageSize=10&pageNumber=%d";
     private final int FINE_LOCATION_PERMISSION = 1;
     String json = "";
     private ArrayList<Establishments> establishments = new ArrayList<>();
@@ -106,8 +105,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         Intent intent = getIntent();
-        boolean check = intent.getBooleanExtra("check", false);
-        String query = intent.getStringExtra("query");
+        QueryData queryData = (QueryData) intent.getSerializableExtra("query_data");
+
+//        boolean check = intent.getBooleanExtra("query_data", false);
+//        String query = intent.getStringExtra("query");
 
 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
@@ -232,30 +233,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         hideMapFragment();
 
 
-        if (query != null) { // use boolean from the other intent
-            if (!check) {
-                query = query + String.format("longitude=%f&latitude=%f", longitude, latitude);
-            }
-            try {
-                readUrl(query);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (queryData != null) { // use boolean from the other intent
+            queryAdvancedSearch(queryData);
         }
         switchLoadingGif();
         switchHygieneAndDate(false);
         switchLocation(false);
     }
 
+    private void queryAdvancedSearch(QueryData qData) {
+        try {
+            if (qData.useLocation) {
+                readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_RADIUS_URL,
+                        qData.name, qData.maxDistanceLimit, qData.businessTypeId,
+                        qData.ratingKey, "distance", 1, 20, longitude, latitude));
+
+            } else {
+                readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_URL,
+                        qData.name, qData.businessTypeId, qData.ratingKey,
+                        qData.localAuthorityId, "rating", 1, 20));
+            }
+        } catch (Exception e) {
+            // TODO handle exception
+        }
+    }
 
     public void onSimpleSearcClick() {
         hideSoftKeyboard();
         String address = searchBarView.getText().toString();
-        Log.v("Print", String.format(SIMPLE_SEARCH_URL, address, 1));
         try {
-            readUrl(String.format(SIMPLE_SEARCH_URL, address, 1));
+            readUrl(String.format(SearchQueries.SIMPLE_SEARCH_URL, address, 1));
         } catch (Exception e) {
-//            Log.e("Exception", e.getMessage());
             // TODO handle error state or no response being returned
         }
 
@@ -263,11 +271,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void onLocalSearchClick(View view) {
         requestUpdate();
-        Log.v("Print", String.format(LOCAL_SEARCH_URL, longitude, latitude));
         try {
-            readUrl(String.format(LOCAL_SEARCH_URL, longitude, latitude));
+            readUrl(String.format(SearchQueries.LOCAL_SEARCH_URL, longitude, latitude));
         } catch (Exception e) {
-//            Log.e("Exception", e.getMessage());
             // TODO handle error state or no response being returned
         }
     }
@@ -312,6 +318,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switchLocation(true);
         switchHygieneAndDate(true);
         onMapReady(map);
+
+
+        for(Establishments e : establishments)
+            Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
     }
 
 //    @Override
@@ -335,8 +345,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (permissions.length == 1 &&
                     permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 map.setMyLocationEnabled(true);
-
+                attachLocManager();
             } else {
                 // Permission was denied. Display an error message.
             }
@@ -416,6 +437,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             builder.include(myPosition.getPosition());
         }
 
+        int i=0;
         for (Establishments e : establishments) {
             MarkerOptions option = new MarkerOptions();
             googleMap.addMarker(option.position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
@@ -423,6 +445,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     snippet(e.BusinessType).
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
             builder.include(option.getPosition());
+            Log.e("lol", String.valueOf(i++));
         }
 
         CameraUpdate camUpd = null;

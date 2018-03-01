@@ -16,7 +16,7 @@ public class BusinessTypes {
         String BusinessTypeName;
         List<links> links;
 
-        public class links{
+        public class links {
             String rel;
             String href;
         }

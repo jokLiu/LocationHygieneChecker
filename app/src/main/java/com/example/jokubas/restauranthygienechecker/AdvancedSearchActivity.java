@@ -1,16 +1,23 @@
 package com.example.jokubas.restauranthygienechecker;
 
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
@@ -26,23 +33,10 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     private static final String BUSINESS_TYPES_URL = "http://api.ratings.food.gov.uk/BusinessTypes";
     private static final String REGIONS_URL = "http://api.ratings.food.gov.uk/Regions";
     private static final String AUTHORITIES_URL = "http://api.ratings.food.gov.uk/Authorities";
-    // TODO check maxDistanceLimit
-    private static final String ADVANCED_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?"+
-            "name=%s&businessTypeId=%d&"+
-            "schemeTypeKey=FHRS&ratingKey=%s&ratingOperatorKey=GreaterThanOrEqual&"+
-            "localAuthorityId=%d&"+
-            "sortOptionKey=%s&pageNumber=%d&pageSize=%d";
-
-    private static final String ADVANCED_SEARCH_RADIUS_URL = "http://api.ratings.food.gov.uk/Establishments?"+
-            "name=%s&"+
-            "maxDistanceLimit=%d&businessTypeId=%d&"+
-            "schemeTypeKey=FHRS&ratingKey=%s&ratingOperatorKey=GreaterThanOrEqual&"+
-            "sortOptionKey=%s&pageNumber=%d&pageSize=%d&";//+
-           // "longitude=%f&latitude=%f&";
     private List<String> businessTypesSpinner = new ArrayList<>();
     private List<String> regionsSpinner = new ArrayList<>();
     private List<String> authoritiesSpinner = new ArrayList<>();
-    private List<RegionsWraper.Regions> regionsStorage;
+    private List<RegionsWrapper.Regions> regionsStorage;
     private List<BusinessTypes.businessTypes> businessTypesStorage;
     private List<AuthoritiesWrapper.Authorities> authoritiesStorage;
     private EditText businessNameView;
@@ -95,42 +89,60 @@ public class AdvancedSearchActivity extends AppCompatActivity {
 
 
     public void onClickSearch(View view) {
-        String apiQuery = "";
-        Intent intent = new Intent(AdvancedSearchActivity.this, MainActivity.class);
-        String name = businessNameView.getText().toString();
-        int typeID = 0;
-        String type = businessTypesSpinner.get(businessTypeView.getSelectedItemPosition());
-        for(BusinessTypes.businessTypes b : businessTypesStorage)
-            typeID = b.BusinessTypeName.equals(type) ? b.BusinessTypeId : typeID;
 
-        String rating = ratingHighView.getSelectedItem().toString();
-        int radius = -1;
-        int authID = -1;
+        // TODO check if the data was fetched from the internet
+        QueryData dataToPass = new QueryData();
+        // new intent
+        Intent intent = new Intent(AdvancedSearchActivity.this, MainActivity.class);
+
+        // business name
+        dataToPass.name = businessNameView.getText().toString();
+
+        // business type id, -1 indicates failure
+        dataToPass.businessTypeId = -1;
+        String type = businessTypesSpinner.get(businessTypeView.getSelectedItemPosition());
+        for (BusinessTypes.businessTypes b : businessTypesStorage)
+            dataToPass.businessTypeId = b.BusinessTypeName.equals(type) ? b.BusinessTypeId : dataToPass.businessTypeId;
+
+        // rating value
+        dataToPass.ratingKey = ratingHighView.getSelectedItem().toString();
+
+        // distance
+        dataToPass.maxDistanceLimit = Integer.valueOf(radiusView.getSelectedItem().toString());
+        ;
+
+        // authority id, -1 indicates failure
+        dataToPass.localAuthorityId = -1;
+
         //use location
-        // TODO CHECK WHETHER LOCATION ACTUALLY EXISTS AND IS ENABLED
-        if(checkBox.isChecked()){
-            radius = Integer.valueOf(radiusView.getSelectedItem().toString());
-            intent.putExtra("check", false);
-            apiQuery = String.format(ADVANCED_SEARCH_RADIUS_URL,name,radius, typeID,rating, "distance",1,20);
-            Log.e("QUERY",apiQuery);
-            intent.putExtra("check", false);
+        if (checkBox.isChecked()) {
+            // TODO CHECK WHETHER LOCATION ACTUALLY EXISTS AND IS ENABLED
+            if (!checkGpsStatus()) {
+                noResultsToast();
+                Log.e("PRINTED", "PRINTED");
+                return;
+            }
+            // if not show the toast
+            dataToPass.useLocation = true;
+
         }
         // use authority and region
-        else{
+        else {
+            // TODO exception when no input
             String authName = authoritiesSpinner.get(authoritiesView.getSelectedItemPosition());
-            for(AuthoritiesWrapper.Authorities a : authoritiesStorage) {
-                authID = a.Name.equals(authName) ? a.LocalAuthorityId : authID;
-//                break;
+            for (AuthoritiesWrapper.Authorities a : authoritiesStorage) {
+                if (a.Name.equals(authName)) {
+                    dataToPass.localAuthorityId = a.LocalAuthorityId;
+                    break;
+                }
             }
-            apiQuery = String.format(ADVANCED_SEARCH_URL,name,typeID,rating, authID, "rating",1,20);
-            Log.e("QUERY",apiQuery);
-            intent.putExtra("check", true);
+            dataToPass.useLocation = false;
+
         }
 
-        intent.putExtra("query", apiQuery);
+        intent.putExtra("query_data", dataToPass);
         startActivity(intent);
         finish();
-
 
     }
 
@@ -143,11 +155,11 @@ public class AdvancedSearchActivity extends AppCompatActivity {
             // TODO if current location is used make sure that user gave access to the GPS
             radiusView.setEnabled(true);
             regionView.setEnabled(false);
-            regionView.setEnabled(false);
+            authoritiesView.setEnabled(false);
         } else {
             radiusView.setEnabled(false);
             regionView.setEnabled(true);
-            regionView.setEnabled(true);
+            authoritiesView.setEnabled(true);
         }
     }
 
@@ -168,11 +180,10 @@ public class AdvancedSearchActivity extends AppCompatActivity {
                                 populateBusinessTypes(result);
                                 break;
                             case REGIONS:
-                                RegionsWraper regions = gson.fromJson(response, RegionsWraper.class);
+                                RegionsWrapper regions = gson.fromJson(response, RegionsWrapper.class);
                                 populateRegions(regions);
                                 break;
                             case AUTHORITIES:
-                                Log.v("Response", response);
                                 AuthoritiesWrapper auth = gson.fromJson(response, AuthoritiesWrapper.class);
                                 populateAuthorities(auth);
                                 break;
@@ -182,7 +193,6 @@ public class AdvancedSearchActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
                         // TODO figure out later
-//                        Log.v("JSON",response);
                     }
                 });
     }
@@ -199,9 +209,9 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         businessTypeView.setAdapter(adapter);
     }
 
-    private void populateRegions(RegionsWraper regions) {
+    private void populateRegions(RegionsWrapper regions) {
         regionsStorage = regions.regions;
-        for (RegionsWraper.Regions r : regionsStorage) {
+        for (RegionsWrapper.Regions r : regionsStorage) {
             regionsSpinner.add(r.name);
         }
 
@@ -230,5 +240,25 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         authoritiesView.setAdapter(adapter);
     }
 
+
+    private boolean checkGpsStatus() {
+
+        LocationManager locationManager = (LocationManager) getApplicationContext().
+                getSystemService(Context.LOCATION_SERVICE);
+
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    private void noResultsToast() {
+        Toast toast = new Toast(getBaseContext());
+        toast.setDuration(Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.toast, null);
+        ((TextView)view.findViewById(R.id.error_message)).setText(R.string.not_enabled);
+
+        toast.setView(view);
+        toast.show();
+    }
 
 }

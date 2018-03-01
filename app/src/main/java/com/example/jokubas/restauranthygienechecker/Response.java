@@ -7,13 +7,5 @@ import java.util.List;
  */
 
 public class Response {
-
-
     public List<Establishments> establishments;
-
-    @Override
-    public String toString(){
-        return establishments.get(0).BusinessName;
-    }
-
 }

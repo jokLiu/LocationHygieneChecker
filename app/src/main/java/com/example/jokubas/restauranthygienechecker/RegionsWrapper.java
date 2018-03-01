@@ -6,7 +6,7 @@ import java.util.List;
  * Created by jokubas on 25/02/18.
  */
 
-public class RegionsWraper {
+public class RegionsWrapper {
     public class Regions{
         int id;
         String name;

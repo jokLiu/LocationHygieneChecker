@@ -50,8 +50,6 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
 
         if(selectedEst == null) return null;
 
-
-
         ((TextView) layout.findViewById(R.id.name)).setText(selectedEst.BusinessName);
         ((TextView) layout.findViewById(R.id.type)).setText(selectedEst.BusinessType);
         ((TextView) layout.findViewById(R.id.address)).setText(selectedEst.AddressLine1);
@@ -63,7 +61,6 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
         LatLng markerPosition = marker.getPosition();
 
         Point markerPoint = projection.toScreenLocation(markerPosition);
-        Log.e("fasfas",String.valueOf(markerPoint.x));
         android.support.constraint.ConstraintLayout view = context.findViewById(R.id.container);
         Point targetPoint = new Point(markerPoint.x, markerPoint.y - (view.getHeight()*2/7));
         LatLng targetPosition = projection.fromScreenLocation(targetPoint);

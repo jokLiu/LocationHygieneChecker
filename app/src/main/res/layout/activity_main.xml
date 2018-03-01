@@ -167,18 +167,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchView" />
 
-
-    <!--<fragment xmlns:android="http://schemas.android.com/apk/res/android"-->
-        <!--xmlns:tools="http://schemas.android.com/tools"-->
-        <!--android:id="@+id/advanced_fragment"-->
-        <!--android:layout_width="433dp"-->
-        <!--android:layout_height="682dp"-->
-        <!--android:name="com.example.jokubas.restauranthygienechecker.MainActivity"-->
-        <!--app:layout_constraintBottom_toBottomOf="parent"-->
-        <!--app:layout_constraintEnd_toEndOf="parent"-->
-        <!--app:layout_constraintStart_toStartOf="parent"-->
-        <!--app:layout_constraintTop_toTopOf="parent"-->
-        <!--app:layout_constraintVertical_bias="1.0" />-->
-
-
 </android.support.constraint.ConstraintLayout>
