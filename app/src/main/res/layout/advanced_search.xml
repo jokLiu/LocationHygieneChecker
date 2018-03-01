@@ -14,11 +14,11 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/scrollView2"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="350dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,16 +35,18 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:background="@drawable/adnvaced_draw">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
+                    android:layout_width="2dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Business Name"
                     android:textColor="@color/black"
-                    android:textSize="18sp" />
+                    android:textSize="17sp"
+                    android:textStyle="italic" />
 
                 <EditText
                     android:id="@+id/business_name"
@@ -60,16 +62,19 @@
             <LinearLayout
                 android:id="@+id/layoutCountry"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:background="@drawable/adnvaced_draw">
 
                 <TextView
                     android:layout_width="0dp"
-                    android:layout_height="40dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:elegantTextHeight="true"
                     android:text="Type of Business"
                     android:textColor="@color/black"
-                    android:textSize="18sp" />
+                    android:textSize="17sp"
+                    android:textStyle="italic" />
 
                 <Spinner
                     android:id="@+id/type_of_business"
@@ -85,16 +90,18 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:background="@drawable/adnvaced_draw">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Hygiene Rating"
                     android:textColor="@color/black"
-                    android:textSize="18sp" />
+                    android:textSize="17sp"
+                    android:textStyle="italic" />
 
                 <Spinner
                     android:id="@+id/rating_high"
@@ -109,17 +116,19 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:background="@drawable/adnvaced_draw">
 
                 <CheckBox
                     android:id="@+id/current_loc_check_box"
-                    android:layout_width="99dp"
-                    android:layout_height="40dp"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onClickCheckBox"
                     android:text="Use Current Location"
-                    android:textSize="18sp" />
+                    android:textSize="17sp"
+                    android:textStyle="italic" />
 
                 <Spinner
                     android:id="@+id/radius_spinner"
@@ -135,7 +144,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:background="@drawable/adnvaced_draw">
 
                 <TextView
                     android:layout_width="0dp"
@@ -143,7 +153,8 @@
                     android:layout_weight="1"
                     android:text="Region"
                     android:textColor="@color/black"
-                    android:textSize="18sp" />
+                    android:textSize="17sp"
+                    android:textStyle="italic" />
 
                 <Spinner
                     android:id="@+id/region_spinner"
@@ -158,7 +169,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:background="@drawable/adnvaced_draw">
 
                 <TextView
                     android:layout_width="0dp"
@@ -166,7 +178,8 @@
                     android:layout_weight="1"
                     android:text="Authority"
                     android:textColor="@color/black"
-                    android:textSize="18sp" />
+                    android:textSize="17sp"
+                    android:textStyle="italic" />
 
                 <Spinner
                     android:id="@+id/authority_spinner"
@@ -185,12 +198,13 @@
         android:id="@+id/search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="40dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:onClick="onClickSearch"
-        android:text="Button"
+        android:text="@string/search"
+        android:background="@drawable/adnvaced_draw"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

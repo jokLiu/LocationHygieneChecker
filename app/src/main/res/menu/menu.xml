@@ -5,7 +5,7 @@
 
     <item android:id="@+id/action_search"
         android:title="Search"
-        android:icon="@drawable/abc_ic_ab_back_material"
+        android:icon="@drawable/ab_back"
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="android.support.v7.widget.SearchView" />
 

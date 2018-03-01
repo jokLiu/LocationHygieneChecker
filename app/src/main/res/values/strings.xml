@@ -6,6 +6,7 @@
     <string name="advanced_search">Advanced Search</string>
     <string name="local_search">Local Search</string>
     <string name="title_activity_maps">Map</string>
+    <string name="search">Search</string>
     <string-array name="ratings">
         <item>0</item>
         <item>1</item>
