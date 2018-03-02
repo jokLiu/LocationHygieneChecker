@@ -14,7 +14,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/scrollView2"
         android:layout_width="380dp"
-        android:layout_height="249dp"
+        android:layout_height="210dp"
         android:layout_marginBottom="80dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -76,7 +76,7 @@
                     android:text="Business Type"
                     android:textColor="@color/black"
                     android:textSize="15sp"
-                    android:textStyle="italic" />
+                    android:textStyle="italic"/>
 
                 <TextView
                     android:id="@+id/type"
@@ -86,7 +86,7 @@
                     android:inputType="text"
                     android:spinnerMode="dropdown"
                     android:textColor="@color/black"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"/>
             </LinearLayout>
 
 
@@ -162,32 +162,54 @@
                     android:textSize="15sp" />
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:background="@drawable/adnvaced_draw"
-                android:orientation="horizontal">
+            <!--<LinearLayout-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="40dp"-->
+                <!--android:background="@drawable/adnvaced_draw"-->
+                <!--android:orientation="horizontal">-->
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="Rating"
-                    android:textColor="@color/black"
-                    android:textSize="15sp"
-                    android:textStyle="italic" />
+                <!--<TextView-->
+                    <!--android:layout_width="0dp"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_weight="0.8"-->
+                    <!--android:text="Rating"-->
+                    <!--android:textColor="@color/black"-->
+                    <!--android:textSize="15sp"-->
+                    <!--android:textStyle="italic" />-->
 
-                <TextView
-                    android:id="@+id/rating"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.5"
-                    android:textColor="@color/black"
-                    android:textSize="15sp" />
-            </LinearLayout>
+                <!--<ImageView-->
+                    <!--android:id="@+id/rating"-->
+                    <!--android:layout_width="0dp"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_weight="1.5"-->
+                    <!--android:textColor="@color/black"-->
+                    <!--android:textSize="15sp"-->
+                    <!--android:src="@drawable/score_5"/>-->
+            <!--</LinearLayout>-->
+
+
 
         </LinearLayout>
     </ScrollView>
+
+    <ImageView
+        android:id="@+id/rating"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1.5"
+        android:src="@drawable/score_5"
+        android:textColor="@color/black"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/scrollView2"
+        app:layout_constraintHorizontal_bias="0.121"
+        app:layout_constraintStart_toStartOf="@+id/scrollView2"
+        app:layout_constraintTop_toBottomOf="@+id/scrollView2"
+        app:layout_constraintVertical_bias="0.0" />
 
     <Button
         android:id="@+id/close"
@@ -196,11 +218,12 @@
         android:layout_marginBottom="40dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="15dp"
         android:background="@drawable/adnvaced_draw"
         android:text="@string/close"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.928"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scrollView2"
         app:layout_constraintVertical_bias="0.0" />

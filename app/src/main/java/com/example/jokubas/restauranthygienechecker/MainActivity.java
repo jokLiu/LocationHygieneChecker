@@ -30,6 +30,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -132,7 +133,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 ((TextView) layout.findViewById(R.id.address)).setText(e.AddressLine1);
                 ((TextView) layout.findViewById(R.id.authority)).setText(e.LocalAuthorityName);
                 ((TextView) layout.findViewById(R.id.authority_email)).setText(e.LocalAuthorityEmailAddress);
-                ((TextView) layout.findViewById(R.id.rating)).setText(e.RatingValue);
+                ImageView rating = layout.findViewById(R.id.rating);
+                switch (e.RatingValue){
+                    case "0":
+                        rating.setImageResource(R.drawable.score_0);
+                        break;
+                    case "1":
+                        rating.setImageResource(R.drawable.score_1);
+                        break;
+                    case "2":
+                        rating.setImageResource(R.drawable.score_2);
+                        break;
+                    case "3":
+                        rating.setImageResource(R.drawable.score_3);
+                        break;
+                    case "4":
+                        rating.setImageResource(R.drawable.score_4);
+                        break;
+                    case "5":
+                        rating.setImageResource(R.drawable.score_5);
+                        break;
+                    default:
+                        rating.setImageResource(R.drawable.score_no);
+                        break;
+                }
+//                rating.setText(e.RatingValue);
 
                 //Get the devices screen density to calculate correct pixel sizes
                 float density = MainActivity.this.getResources().getDisplayMetrics().density;

@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.graphics.Point;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -38,8 +39,7 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
     @SuppressLint("ResourceType")
     @Override
     public View getInfoContents(Marker marker) {
-        View layout = context.getLayoutInflater().inflate(R.layout.pop_up_establishment_window, null);
-
+        View layout = context.getLayoutInflater().inflate(R.layout.map_pop_up, null);
         Establishments selectedEst = null;
         for(Establishments e : establishments) {
             if(marker.getTitle().equals(e.BusinessName)){
@@ -55,7 +55,32 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
         ((TextView) layout.findViewById(R.id.address)).setText(selectedEst.AddressLine1);
         ((TextView) layout.findViewById(R.id.authority)).setText(selectedEst.LocalAuthorityName);
         ((TextView) layout.findViewById(R.id.authority_email)).setText(selectedEst.LocalAuthorityEmailAddress);
-        ((TextView) layout.findViewById(R.id.rating)).setText(selectedEst.RatingValue);
+//        ((TextView) layout.findViewById(R.id.rating)).setText(selectedEst.RatingValue);
+
+        ImageView rating = layout.findViewById(R.id.rating);
+        switch (selectedEst.RatingValue){
+            case "0":
+                rating.setImageResource(R.drawable.score_0);
+                break;
+            case "1":
+                rating.setImageResource(R.drawable.score_1);
+                break;
+            case "2":
+                rating.setImageResource(R.drawable.score_2);
+                break;
+            case "3":
+                rating.setImageResource(R.drawable.score_3);
+                break;
+            case "4":
+                rating.setImageResource(R.drawable.score_4);
+                break;
+            case "5":
+                rating.setImageResource(R.drawable.score_5);
+                break;
+            default:
+                rating.setImageResource(R.drawable.score_no);
+                break;
+        }
 
         Projection projection = map.getProjection();
         LatLng markerPosition = marker.getPosition();
