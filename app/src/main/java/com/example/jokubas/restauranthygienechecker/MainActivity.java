@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SupportMapFragment mapFragment;
     private GoogleMap map;
     private EditText searchBarView;
+    private boolean isMapOn;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -81,9 +82,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.map:
+                    ((ImageView) findViewById(R.id.chef)).setVisibility(View.GONE);
                     switchHygieneAndDate(false);
                     switchLocation(false);
                     showMapFragment();
+                    isMapOn = true;
+                    enableChefImageBasedOnView();
                     return true;
                 case R.id.list:
                     if (establishments != null && establishments.size() > 0) {
@@ -91,6 +95,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         switchLocation(true);
                     }
                     hideMapFragment();
+                    isMapOn = false;
+                    enableChefImageBasedOnView();
                     return true;
             }
             return false;
@@ -103,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        isMapOn = false;
 
         Intent intent = getIntent();
         QueryData queryData = (QueryData) intent.getSerializableExtra("query_data");
@@ -134,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 ((TextView) layout.findViewById(R.id.authority)).setText(e.LocalAuthorityName);
                 ((TextView) layout.findViewById(R.id.authority_email)).setText(e.LocalAuthorityEmailAddress);
                 ImageView rating = layout.findViewById(R.id.rating);
-                switch (e.RatingValue){
+                switch (e.RatingValue) {
                     case "0":
                         rating.setImageResource(R.drawable.score_0);
                         break;
@@ -335,16 +342,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         establishments.addAll(response.establishments);
         estAdpt.notifyDataSetChanged();
         if (establishments.size() == 0) noResultsToast();
+        enableChefImageBasedOnView();
         switchLocation(true);
         switchHygieneAndDate(true);
-        for(Establishments e : establishments)
-            if(e.geocode.longitude ==null || e.geocode.latitude == null) {
+        for (Establishments e : establishments)
+            if (e.geocode.longitude == null || e.geocode.latitude == null) {
 //                readUrl(String.format(Locale.UK, SearchQueries.GEOCODE_POSTCODE_TO_LATLANG_URL, e.PostCode);
                 Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
             }
+
         onMapReady(map);
-
-
 
 
     }
@@ -464,10 +471,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             builder.include(myPosition.getPosition());
         }
 
-        int i=0;
+        int i = 0;
         // TODO Big Johns in simple search causes error
         for (Establishments e : establishments) {
-            if(e.geocode.longitude ==null || e.geocode.latitude == null) continue;
+            if (e.geocode.longitude == null || e.geocode.latitude == null) continue;
             MarkerOptions option = new MarkerOptions();
             googleMap.addMarker(option.position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
                     title(e.BusinessName).
@@ -624,6 +631,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         View view = inflater.inflate(R.layout.toast, null);
         toast.setView(view);
         toast.show();
+    }
+
+    private void enableChefImageBasedOnView(){
+        if (!isMapOn && establishments.size() == 0) {
+            ((ImageView) findViewById(R.id.chef)).setVisibility(View.VISIBLE);
+        } else  ((ImageView) findViewById(R.id.chef)).setVisibility(View.GONE);
     }
 
 }
