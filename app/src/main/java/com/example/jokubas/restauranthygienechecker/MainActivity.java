@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
                 //Inflate the view from a predefined XML layout (no need for root id, using entire layout)
-                View layout = inflater.inflate(R.layout.pop_up_establishment_window, null);
+                View layout = inflater.inflate(R.layout.pop_up_new, null);
 
                 ((TextView) layout.findViewById(R.id.name)).setText(e.BusinessName);
                 ((TextView) layout.findViewById(R.id.type)).setText(e.BusinessType);
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //Get the devices screen density to calculate correct pixel sizes
                 float density = MainActivity.this.getResources().getDisplayMetrics().density;
                 // create a focusable PopupWindow with the given layout and correct size
-                final PopupWindow pw = new PopupWindow(layout, (int) density * 400, (int) density * 600, true);
+                final PopupWindow pw = new PopupWindow(layout, (int) density * 500, (int) density * 450, true);
                 //Button to close the pop-up
                 ((Button) layout.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {

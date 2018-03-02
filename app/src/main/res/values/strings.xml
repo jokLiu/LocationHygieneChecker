@@ -9,6 +9,7 @@
     <string name="search">Search</string>
     <string name="no_results">No results found...</string>
     <string name="not_enabled">"GPS is not enabled"</string>
+    <string name="close">Close</string>
     <string-array name="ratings">
         <item>0</item>
         <item>1</item>
