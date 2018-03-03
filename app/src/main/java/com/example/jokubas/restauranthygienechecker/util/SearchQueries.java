@@ -19,7 +19,9 @@ public class SearchQueries {
     // TODO change size from 30 to 15
     public static final String LOCAL_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?longitude=%f&latitude=%f&sortOptionKey=distance&pageSize=15";
     public static final String SIMPLE_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?address=%s&pageSize=15&pageNumber=%d";
-
     public static final String GEOCODE_POSTCODE_TO_LATLANG_URL = "https://maps.googleapis.com/maps/api/geocode/json?components=postal_code:%s";
-
+    public static final String BUSINESS_TYPES_URL = "http://api.ratings.food.gov.uk/BusinessTypes";
+    public static final String REGIONS_URL = "http://api.ratings.food.gov.uk/Regions";
+    public static final String AUTHORITIES_URL = "http://api.ratings.food.gov.uk/Authorities";
+    public static final String QUERY_DATA = "query_data";
 }

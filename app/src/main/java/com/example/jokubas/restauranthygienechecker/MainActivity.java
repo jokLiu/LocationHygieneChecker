@@ -9,6 +9,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -63,6 +65,8 @@ import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
+
+    // TODO fix the sort options not to appear on the map
     // longitude and latitude has to be inserted
     private final int FINE_LOCATION_PERMISSION = 1;
     private ArrayList<Establishments> establishments = new ArrayList<>();
@@ -638,6 +642,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ((ImageView) findViewById(R.id.chef)).setVisibility(View.VISIBLE);
         } else  ((ImageView) findViewById(R.id.chef)).setVisibility(View.GONE);
     }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
 
 }
 

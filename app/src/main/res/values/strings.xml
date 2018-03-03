@@ -8,6 +8,7 @@
     <string name="title_activity_maps">Map</string>
     <string name="search">Search</string>
     <string name="no_results">No results found...</string>
+    <string name="no_authority">No authority was selected... Please select authority and try again</string>
     <string name="not_enabled">"GPS is not enabled"</string>
     <string name="close">Close</string>
     <string-array name="ratings">
