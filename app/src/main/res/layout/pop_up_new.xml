@@ -135,7 +135,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1.5"
                     android:textColor="@color/black"
-                    android:textSize="1sp" />
+                    android:textSize="15sp" />
             </LinearLayout>
 
             <LinearLayout

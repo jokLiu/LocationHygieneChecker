@@ -116,14 +116,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         isMapOn = false;
 
         Intent intent = getIntent();
-        QueryData queryData = (QueryData) intent.getSerializableExtra("query_data");
+        QueryData queryData = (QueryData) intent.getSerializableExtra(SearchQueries.QUERY_DATA);
 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-//                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-////
-//        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-//        getWindow().setStatusBarColor(getResources().getColor(android.R.color.transparent));
 
         // adapter for the list view of the returned responses
         estAdpt = new ArrayAdapter(this, android.R.layout.simple_selectable_list_item, establishments);
@@ -221,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onLocationChanged(Location location) {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
-                Log.e("printed", String.valueOf(latitude));
             }
 
             @Override
@@ -257,11 +251,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         requestUpdate();
 
-
-        mapFragment = (SupportMapFragment)
-                getSupportFragmentManager().findFragmentById(R.id.mapView);
+        map = null;
+        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapView);
         mapFragment.getMapAsync(this);
-        hideMapFragment();
 
 
         if (queryData != null) { // use boolean from the other intent
@@ -381,18 +373,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (permissions.length == 1 &&
                     permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
-                }
-                map.setMyLocationEnabled(true);
                 attachLocManager();
             } else {
                 // Permission was denied. Display an error message.
@@ -463,51 +443,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // TODO fix this method
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        if (map == null) hideMapFragment();
 
         map = googleMap;
-        googleMap.clear();
+        map.clear();
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         MarkerOptions myPosition = new MarkerOptions();
-        if (latitude != 0f && longitude != 0) {
+        if (checkGpsStatus()) {
             myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
             googleMap.addMarker(myPosition);
             builder.include(myPosition.getPosition());
         }
 
-        int i = 0;
-        // TODO Big Johns in simple search causes error
         for (Establishments e : establishments) {
             if (e.geocode.longitude == null || e.geocode.latitude == null) continue;
             MarkerOptions option = new MarkerOptions();
             googleMap.addMarker(option.position(new LatLng(Double.valueOf(e.geocode.latitude), Double.valueOf(e.geocode.longitude))).
                     title(e.BusinessName).
-                    snippet(e.BusinessType).
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
             builder.include(option.getPosition());
-            Log.e("lol", String.valueOf(i++));
         }
 
         CameraUpdate camUpd = null;
-        if (establishments.size() == 0 && myPosition.getPosition() == null)
+        if (establishments.size() == 0 && !checkGpsStatus()/*myPosition.getPosition() == null*/) {
             camUpd = CameraUpdateFactory.newLatLngZoom(
                     new MarkerOptions().position(new LatLng(51.5074, 0.1278)).getPosition(), 10F);
-        else if (establishments.size() == 0) camUpd = CameraUpdateFactory.newLatLngZoom(
-                new MarkerOptions().position(new LatLng(latitude, longitude)).getPosition(), 10F);
-        else {
-            int padding = 0;
+        } else if (establishments.size() == 0) {
+            camUpd = CameraUpdateFactory.newLatLngZoom(
+                    new MarkerOptions().position(new LatLng(latitude, longitude)).getPosition(), 10F);
+        } else {
             LatLngBounds bounds = builder.build();
-            camUpd = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+            camUpd = CameraUpdateFactory.newLatLngBounds(bounds, 0);
         }
 
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
-        googleMap.setPadding(80, 250, 80, 350);
-        try {
-            googleMap.animateCamera(camUpd);
-        } catch (Exception e) {
-        }
-
+        map.setPadding(80, 250, 80, 350);
+        map.animateCamera(camUpd);
         map.setInfoWindowAdapter(new MapInfoAdapter(MainActivity.this, establishments, map));
         map.setOnMarkerClickListener(this);
     }
@@ -637,10 +610,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         toast.show();
     }
 
-    private void enableChefImageBasedOnView(){
+    private void enableChefImageBasedOnView() {
         if (!isMapOn && establishments.size() == 0) {
             ((ImageView) findViewById(R.id.chef)).setVisibility(View.VISIBLE);
-        } else  ((ImageView) findViewById(R.id.chef)).setVisibility(View.GONE);
+        } else ((ImageView) findViewById(R.id.chef)).setVisibility(View.GONE);
     }
 
     private boolean isNetworkAvailable() {
@@ -648,6 +621,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private boolean checkGpsStatus() {
+        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) &&
+                ((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER);
+
     }
 
 
