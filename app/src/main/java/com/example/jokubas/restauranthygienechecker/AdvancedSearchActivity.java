@@ -15,11 +15,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.jokubas.restauranthygienechecker.util.QueryType;
 import com.example.jokubas.restauranthygienechecker.util.SearchQueries;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;

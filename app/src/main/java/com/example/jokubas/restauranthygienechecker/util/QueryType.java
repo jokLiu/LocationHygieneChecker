@@ -1,4 +1,4 @@
-package com.example.jokubas.restauranthygienechecker;
+package com.example.jokubas.restauranthygienechecker.util;
 
 /**
  * Created by jokubas on 25/02/18.

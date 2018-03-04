@@ -28,6 +28,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -80,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private EditText searchBarView;
     private boolean isMapOn;
     private boolean isSearchLocalBased;
+    private boolean loadingFlag;
+    private int lastPageSize;
+    private static String LAST_QUERY;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -116,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         isMapOn = false;
         isSearchLocalBased = true;
+        loadingFlag = false;
 
         Intent intent = getIntent();
         QueryData queryData = (QueryData) intent.getSerializableExtra(SearchQueries.QUERY_DATA);
@@ -263,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switchLoadingGif();
         switchHygieneAndDate(false);
         switchLocation(false);
+        setOnScrollListener();
     }
 
     private void queryAdvancedSearch(QueryData qData) {
@@ -270,42 +276,46 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (qData.useLocation) {
                 readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_RADIUS_URL,
                         qData.name, qData.maxDistanceLimit, qData.businessTypeId,
-                        qData.ratingKey, "distance", 1, 20, longitude, latitude));
+                        qData.ratingKey, longitude, latitude, "distance", SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
 
             } else {
                 readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_URL,
                         qData.name, qData.businessTypeId, qData.ratingKey,
-                        qData.localAuthorityId, "rating", 1, 20));
+                        qData.localAuthorityId, "rating", SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
             }
         } catch (Exception e) {
             // TODO handle exception
         }
+
     }
 
     public void onSimpleSearchClick() {
+        lastPageSize = 1;
         isSearchLocalBased = false;
         enableSortOption(SortOptions.NONE);
         hideSoftKeyboard();
         String address = searchBarView.getText().toString();
         try {
-            readUrl(String.format(SearchQueries.SIMPLE_SEARCH_URL, address, 1));
+            readUrl(String.format(SearchQueries.SIMPLE_SEARCH_URL, address, lastPageSize++));
         } catch (Exception e) {
             // TODO handle error state or no response being returned
         }
     }
 
     public void onLocalSearchClick(View view) {
+        lastPageSize = 1;
         requestUpdate();
         isSearchLocalBased = true;
         enableSortOption(SortOptions.NONE);
         try {
-            readUrl(String.format(SearchQueries.LOCAL_SEARCH_URL, longitude, latitude));
+            readUrl(String.format(SearchQueries.LOCAL_SEARCH_URL, longitude, latitude, lastPageSize++));
         } catch (Exception e) {
             // TODO handle error state or no response being returned
         }
     }
 
     public void onAdvancedSearchClick(View view) {
+        lastPageSize = 1;
         enableSortOption(SortOptions.NONE);
         isSearchLocalBased = false;
         Intent intent = new Intent(MainActivity.this, AdvancedSearchActivity.class);
@@ -314,6 +324,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void readUrl(String urlString) throws Exception {
+        LAST_QUERY = urlString;
         switchLoadingGif();
         AsyncHttpClient client = new AsyncHttpClient();
         client.addHeader("x-api-version", "2");
@@ -337,7 +348,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void populateList(Response response) {
-        establishments.clear();
+        if (lastPageSize <= 2)
+            establishments.clear();
         establishments.addAll(response.establishments);
         estAdpt.notifyDataSetChanged();
         if (establishments.size() == 0) noResultsToast();
@@ -346,13 +358,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             switchLocation(true);
             switchHygieneAndDate(true);
         }
-        for (Establishments e : establishments)
-            if (e.geocode.longitude == null || e.geocode.latitude == null) {
-//                readUrl(String.format(Locale.UK, SearchQueries.GEOCODE_POSTCODE_TO_LATLANG_URL, e.PostCode);
-                Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
-            }
+//        for (Establishments e : establishments)
+//            if (e.geocode.longitude == null || e.geocode.latitude == null) {
+////                readUrl(String.format(Locale.UK, SearchQueries.GEOCODE_POSTCODE_TO_LATLANG_URL, e.PostCode);
+//                Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
+//            }
 
         onMapReady(map);
+        loadingFlag = false;
+        enableSortOption(SortOptions.NONE);
 
     }
 
@@ -654,6 +668,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             default:
                 break;
         }
+    }
+
+    private void loadAdditionalItems(){
+        LAST_QUERY = LAST_QUERY.substring(0,LAST_QUERY.lastIndexOf("pageNumber"));
+        LAST_QUERY += "pageNumber=" + (lastPageSize++);
+        try {
+            readUrl(LAST_QUERY);
+        } catch (Exception e) {
+//            e.printStackTrace();
+        }
+
+    }
+
+    private void setOnScrollListener() {
+        ((ListView) findViewById(R.id.establishments)).setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView absListView, int i) {
+
+            }
+
+            @Override
+            public void onScroll(AbsListView absListView, int i, int i1, int i2) {
+                if (i + i1 == i2  && i2 != 0) {
+                    if (!loadingFlag) {
+                        loadingFlag = true;
+                        loadAdditionalItems();
+                    }
+                }
+
+            }
+        });
     }
 
     enum SortOptions {
