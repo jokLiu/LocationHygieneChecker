@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap map;
     private EditText searchBarView;
     private boolean isMapOn;
+    private boolean isSearchLocalBased;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.map:
-                    ((ImageView) findViewById(R.id.chef)).setVisibility(View.GONE);
+                    findViewById(R.id.chef).setVisibility(View.GONE);
                     switchHygieneAndDate(false);
                     switchLocation(false);
                     showMapFragment();
@@ -114,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
 
         isMapOn = false;
+        isSearchLocalBased = true;
 
         Intent intent = getIntent();
         QueryData queryData = (QueryData) intent.getSerializableExtra(SearchQueries.QUERY_DATA);
@@ -163,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         rating.setImageResource(R.drawable.score_no);
                         break;
                 }
-//                rating.setText(e.RatingValue);
 
                 //Get the devices screen density to calculate correct pixel sizes
                 float density = MainActivity.this.getResources().getDisplayMetrics().density;
@@ -200,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    onSimpleSearcClick();
+                    onSimpleSearchClick();
                     return true;
                 }
                 return false;
@@ -281,7 +282,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public void onSimpleSearcClick() {
+    public void onSimpleSearchClick() {
+        isSearchLocalBased = false;
+        enableSortOption(SortOptions.NONE);
         hideSoftKeyboard();
         String address = searchBarView.getText().toString();
         try {
@@ -289,11 +292,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (Exception e) {
             // TODO handle error state or no response being returned
         }
-
     }
 
     public void onLocalSearchClick(View view) {
         requestUpdate();
+        isSearchLocalBased = true;
+        enableSortOption(SortOptions.NONE);
         try {
             readUrl(String.format(SearchQueries.LOCAL_SEARCH_URL, longitude, latitude));
         } catch (Exception e) {
@@ -301,7 +305,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public void onAdvancedSearchClieck(View view) {
+    public void onAdvancedSearchClick(View view) {
+        enableSortOption(SortOptions.NONE);
+        isSearchLocalBased = false;
         Intent intent = new Intent(MainActivity.this, AdvancedSearchActivity.class);
         startActivity(intent);
     }
@@ -317,7 +323,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String response) {
                         switchLoadingGif();
-                        Log.v("Response", response);
                         Gson gson = new Gson();
                         Response result = gson.fromJson(response, Response.class);
                         populateList(result);
@@ -326,9 +331,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     @Override
                     public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
                         switchLoadingGif();
-                        Log.e("TOAST", "TPAST");
                         // TODO figure out later
-//                        Log.v("JSON",response);
                     }
                 });
     }
@@ -339,8 +342,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         estAdpt.notifyDataSetChanged();
         if (establishments.size() == 0) noResultsToast();
         enableChefImageBasedOnView();
-        switchLocation(true);
-        switchHygieneAndDate(true);
+        if (!isMapOn) {
+            switchLocation(true);
+            switchHygieneAndDate(true);
+        }
         for (Establishments e : establishments)
             if (e.geocode.longitude == null || e.geocode.latitude == null) {
 //                readUrl(String.format(Locale.UK, SearchQueries.GEOCODE_POSTCODE_TO_LATLANG_URL, e.PostCode);
@@ -449,7 +454,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.clear();
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         MarkerOptions myPosition = new MarkerOptions();
-        if (checkGpsStatus()) {
+        if (checkGpsStatus() && Double.compare(longitude, latitude) != 0) {
             myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
             googleMap.addMarker(myPosition);
@@ -506,7 +511,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onMarkerClick(final Marker marker) {
         marker.showInfoWindow();
 
-
         // Return true to indicate that we have consumed the event and that we don't want
         // for the default behavior to occur.
         return true;
@@ -533,7 +537,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void switchLocation(boolean on) {
         Button location = findViewById(R.id.location_sort);
-        if (on)
+        if (on && isSearchLocalBased)
             location.setVisibility(View.VISIBLE);
         else location.setVisibility(View.GONE);
     }
@@ -553,6 +557,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 else return -1;
             }
         });
+        enableSortOption(SortOptions.HYGIENE);
         estAdpt.notifyDataSetChanged();
     }
 
@@ -564,6 +569,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return (e1.Distance > e2.Distance) ? 1 : ((e1.Distance == e2.Distance) ? 0 : -1);
             }
         });
+        enableSortOption(SortOptions.LOCATION);
         estAdpt.notifyDataSetChanged();
     }
 
@@ -588,6 +594,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return date1.compareTo(date2);
             }
         });
+        enableSortOption(SortOptions.DATE);
         estAdpt.notifyDataSetChanged();
     }
 
@@ -612,8 +619,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void enableChefImageBasedOnView() {
         if (!isMapOn && establishments.size() == 0) {
-            ((ImageView) findViewById(R.id.chef)).setVisibility(View.VISIBLE);
-        } else ((ImageView) findViewById(R.id.chef)).setVisibility(View.GONE);
+            findViewById(R.id.chef).setVisibility(View.VISIBLE);
+        } else findViewById(R.id.chef).setVisibility(View.GONE);
     }
 
     private boolean isNetworkAvailable() {
@@ -627,7 +634,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) &&
                 ((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
 
+    private void enableSortOption(SortOptions opt) {
+        findViewById(R.id.hygiene_sort).setBackgroundResource(R.drawable.button_sort);
+        findViewById(R.id.date_sort).setBackgroundResource(R.drawable.button_sort);
+        findViewById(R.id.location_sort).setBackgroundResource(R.drawable.button_sort);
+        switch (opt) {
+            case DATE:
+                findViewById(R.id.date_sort).setBackgroundResource(R.drawable.button_sort_2);
+                break;
+            case HYGIENE:
+                findViewById(R.id.hygiene_sort).setBackgroundResource(R.drawable.button_sort_2);
+                break;
+            case LOCATION:
+                findViewById(R.id.location_sort).setBackgroundResource(R.drawable.button_sort_2);
+                break;
+            case NONE:
+            default:
+                break;
+        }
+    }
+
+    enum SortOptions {
+        HYGIENE, DATE, LOCATION, NONE
     }
 
 
