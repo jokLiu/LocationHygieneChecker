@@ -1,9 +1,14 @@
 package com.example.jokubas.restauranthygienechecker.JSON_classes;
 
-/**
- * Created by jokubas on 20/02/18.
- */
 
+/**
+ * Created by jokubas on 25/02/18.
+ *
+ *
+ * Class to wrap the response from JSON returned by calling
+ * Hygiene Rating API
+ *
+ */
 public class Establishments {
     public int FHRSID;
     public String LocalAuthorityBusinessID;

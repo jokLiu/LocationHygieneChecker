@@ -40,13 +40,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:orientation="horizontal"
-                android:background="@drawable/adnvaced_draw">
+                android:background="@drawable/advanced_draw">
 
                 <TextView
                     android:layout_width="11dp"
                     android:layout_height="40dp"
                     android:layout_weight="1"
-                    android:text="Business Name"
+                    android:text="@string/business_name"
                     android:textColor="@color/black"
                     android:textSize="17sp"
                     android:textStyle="italic" />
@@ -67,14 +67,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:orientation="horizontal"
-                android:background="@drawable/adnvaced_draw">
+                android:background="@drawable/advanced_draw">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.1"
                     android:elegantTextHeight="true"
-                    android:text="Type of Business"
+                    android:text="@string/business_type"
                     android:textColor="@color/black"
                     android:textSize="17sp"
                     android:textStyle="italic" />
@@ -95,13 +95,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:orientation="horizontal"
-                android:background="@drawable/adnvaced_draw">
+                android:background="@drawable/advanced_draw">
 
                 <TextView
                     android:layout_width="130dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Hygiene Rating"
+                    android:text="@string/hygiene_rating"
                     android:textColor="@color/black"
                     android:textSize="17sp"
                     android:textStyle="italic" />
@@ -121,7 +121,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:orientation="horizontal"
-                android:background="@drawable/adnvaced_draw">
+                android:background="@drawable/advanced_draw">
 
                 <CheckBox
                     android:id="@+id/current_loc_check_box"
@@ -129,7 +129,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onClickCheckBox"
-                    android:text="Use Current Location"
+                    android:text="@string/checkbox"
                     android:textSize="17sp"
                     android:textStyle="italic" />
 
@@ -148,13 +148,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:background="@drawable/adnvaced_draw">
+                android:background="@drawable/advanced_draw">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="40dp"
                     android:layout_weight="1.1"
-                    android:text="Region"
+                    android:text="@string/region"
                     android:textColor="@color/black"
                     android:textSize="17sp"
                     android:textStyle="italic" />
@@ -173,13 +173,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:background="@drawable/adnvaced_draw">
+                android:background="@drawable/advanced_draw">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="40dp"
                     android:layout_weight="1.1"
-                    android:text="Authority"
+                    android:text="@string/authority"
                     android:textColor="@color/black"
                     android:textSize="17sp"
                     android:textStyle="italic" />
@@ -207,7 +207,7 @@
         android:layout_marginTop="8dp"
         android:onClick="onClickSearch"
         android:text="@string/search"
-        android:background="@drawable/adnvaced_draw"
+        android:background="@drawable/advanced_draw"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

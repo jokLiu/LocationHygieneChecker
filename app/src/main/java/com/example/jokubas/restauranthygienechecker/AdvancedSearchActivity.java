@@ -43,6 +43,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     private List<String> businessTypesSpinner = new ArrayList<>();
     private List<String> regionsSpinner = new ArrayList<>();
     private List<String> authoritiesSpinner = new ArrayList<>();
+
     private List<RegionsWrapper.Regions> regionsStorage;
     private List<BusinessTypes.businessTypes> businessTypesStorage;
     private List<AuthoritiesWrapper.Authorities> authoritiesStorage;
@@ -78,7 +79,6 @@ public class AdvancedSearchActivity extends AppCompatActivity {
             readUrl(SearchQueries.REGIONS_URL, QueryType.REGIONS);
             readUrl(SearchQueries.AUTHORITIES_URL, QueryType.AUTHORITIES);
         } catch (Exception ex) {
-            Log.e("READ_URL", ex.getMessage());
         }
 
         // when item from region view is selected, the authorities items have
@@ -90,7 +90,8 @@ public class AdvancedSearchActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {}
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
         });
 
         // depending on whether checkBox is checked or not
@@ -102,6 +103,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
 
     /**
      * On click search.
+     * Method is called when the user presses "search" button
      *
      * @param view the view
      */
@@ -158,7 +160,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
             // check whether authority was selected, if not display
             // the error message and abort further actions
             int position = authoritiesView.getSelectedItemPosition();
-            if(position < 0){
+            if (position < 0) {
                 noResultsToast(R.string.no_authority);
                 return;
             }
@@ -188,6 +190,8 @@ public class AdvancedSearchActivity extends AppCompatActivity {
 
     /**
      * On click check box.
+     * <p>
+     * Method is called when user clicks on check box and changes its state.
      *
      * @param view the view
      */
@@ -195,6 +199,13 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         manageCheckBox();
     }
 
+    /**
+     * Based on the checkbox certain fields of the view
+     * are disabled and others are enabled.
+     * <p>
+     * If checkBox is checked then region and authorities views are disabled.
+     * Otherwise radius view is disabled.
+     */
     private void manageCheckBox() {
         if (checkBox.isChecked()) {
             // TODO if current location is used make sure that user gave access to the GPS
@@ -208,8 +219,15 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         }
     }
 
-    private void readUrl(String urlString, final QueryType type) throws Exception {
+    /**
+     * Method for reading JSON from the Hygiene API
+     *
+     * @param urlString URL to be used for fetching JSON data
+     * @param type      the type of the message
+     */
+    private void readUrl(String urlString, final QueryType type) {
 
+        // create HTTP client
         AsyncHttpClient client = new AsyncHttpClient();
 
         // setting the headers for Food Hygiene API
@@ -237,40 +255,62 @@ public class AdvancedSearchActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
-                // TODO figure out later
+                // display error message in case something went wrong
+                noResultsToast(R.string.failed_query);
             }
         });
     }
 
+    /**
+     * Populate the spinner of business types based on the data passed in.
+     *
+     * @param types the types of all businesses
+     */
     private void populateBusinessTypes(BusinessTypes types) {
+        // populate the spinner list
         businessTypesStorage = types.businessTypes;
-        for (BusinessTypes.businessTypes type : businessTypesStorage) {
+        for (BusinessTypes.businessTypes type : businessTypesStorage)
             businessTypesSpinner.add(type.BusinessTypeName);
-        }
 
+
+        // set the adapter for the spinner view with the list
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, businessTypesSpinner);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         businessTypeView.setAdapter(adapter);
     }
 
+    /**
+     * Populate the spinner of regions based on the data passed in.
+     *
+     * @param regions the all possible regions
+     */
     private void populateRegions(RegionsWrapper regions) {
+        // populate the spinner list
         regionsStorage = regions.regions;
-        for (RegionsWrapper.Regions r : regionsStorage) {
+        for (RegionsWrapper.Regions r : regionsStorage)
             regionsSpinner.add(r.name);
-        }
 
+        // set the adapter for the spinner view with the list
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, regionsSpinner);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         regionView.setAdapter(adapter);
     }
 
+    /**
+     * Populate the spinner of authorities based on the data passed in.
+     *
+     * @param auth the all authorities of a particular region
+     */
     private void populateAuthorities(AuthoritiesWrapper auth) {
         authoritiesStorage = auth.authorities;
-        for (AuthoritiesWrapper.Authorities a : authoritiesStorage) {
+        for (AuthoritiesWrapper.Authorities a : authoritiesStorage)
             authoritiesSpinner.add(a.Name);
-        }
     }
 
+    /**
+     * Adds the authorities to the adapter based on the result returned
+     * by the API call (depending on the region selected)
+     */
     private void addAuthorities() {
         if (authoritiesStorage == null) return;
         String rName = regionsSpinner.get(regionView.getSelectedItemPosition());
@@ -285,19 +325,37 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * Check the GPS status of the smartphone.
+     * If GPS is enabled and we are granted the permission true is
+     * returned, false otherwise.
+     *
+     * @return true if GPS is enables, false otherwise
+     */
     private boolean checkGpsStatus() {
         LocationManager locationManager = (LocationManager) getApplicationContext().
                 getSystemService(Context.LOCATION_SERVICE);
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        return locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ;
     }
 
+    /**
+     * Method for displaying the specific toast message based on
+     * the string id passed as a parameter.
+     *
+     * @param errorMessage the id of the string to be displayed in the message.
+     */
     private void noResultsToast(int errorMessage) {
+        // create toast and set the specific settings
         Toast toast = new Toast(getBaseContext());
         toast.setDuration(Toast.LENGTH_LONG);
         toast.setGravity(Gravity.CENTER, 0, 0);
-        LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.toast, null);
-        ((TextView) view.findViewById(R.id.error_message)).setText(errorMessage);
+
+        // get the inflater and set the custom layout for the toast
+        LayoutInflater inflater = (LayoutInflater) getBaseContext().
+                getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater != null ? inflater.inflate(R.layout.toast, null) : null;
+        if(view != null)
+            ((TextView) view.findViewById(R.id.error_message)).setText(errorMessage);
         toast.setView(view);
         toast.show();
     }
@@ -318,12 +376,12 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     }
 
 
-    private void addKeyboardCloseListener(){
+    private void addKeyboardCloseListener() {
         (findViewById(R.id.business_name)).setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
                 Log.e("CALLSD", "DSADASD" + view.getId() + b);
-                if(view.getId() == R.id.business_name && b){
+                if (view.getId() == R.id.business_name && b) {
                     Log.e("CALLSD", "DSADASDfasdfsa");
                     hideSoftKeyboard();
                 }

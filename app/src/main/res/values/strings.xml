@@ -12,6 +12,21 @@
     <string name="not_enabled">"GPS is not enabled"</string>
     <string name="close">Close</string>
     <string name="hint">Radius</string>
+    <string name="sort_by">Sort By:</string>
+    <string name="failed_query">Fetching data failed... Please try again</string>
+    <string name="hygiene">Hygiene</string>
+    <string name="date">Date</string>
+    <string name="location">Location</string>
+    <string name="business_name">Business Name</string>
+    <string name="business_type">Type of Business</string>
+    <string name="hygiene_rating">Hygiene Rating</string>
+    <string name="checkbox">Use Current Location</string>
+    <string name="region">Region</string>
+    <string name="authority">Authority</string>
+    <string name="address">Address</string>
+    <string name="auth_email">Authority Email</string>
+
+
     <string-array name="ratings">
         <item>0</item>
         <item>1</item>

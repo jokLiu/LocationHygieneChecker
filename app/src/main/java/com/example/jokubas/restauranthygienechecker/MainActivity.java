@@ -354,12 +354,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             establishments.clear();
         establishments.addAll(response.establishments);
         estAdpt.notifyDataSetChanged();
-        if (establishments.size() == 0) noResultsToast();
         enableChefImageBasedOnView();
         if (!isMapOn) {
             switchLocation(true);
             switchHygieneAndDate(true);
         }
+        if (establishments.size() == 0){
+            noResultsToast();
+            switchHygieneAndDate(false);
+        }
+
 //        for (Establishments e : establishments)
 //            if (e.geocode.longitude == null || e.geocode.latitude == null) {
 ////                readUrl(String.format(Locale.UK, SearchQueries.GEOCODE_POSTCODE_TO_LATLANG_URL, e.PostCode);
@@ -540,13 +544,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void switchHygieneAndDate(boolean on) {
         Button hygiene = findViewById(R.id.hygiene_sort);
         Button date = findViewById(R.id.date_sort);
+        TextView sortByText = findViewById(R.id.sort_by_text);
 
         if (on) {
             hygiene.setVisibility(View.VISIBLE);
             date.setVisibility(View.VISIBLE);
+            sortByText.setVisibility(View.VISIBLE);
         } else {
             hygiene.setVisibility(View.GONE);
             date.setVisibility(View.GONE);
+            sortByText.setVisibility(View.GONE);
         }
     }
 
@@ -673,8 +680,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void loadAdditionalItems(){
+        if(establishments.size() % SearchQueries.DEFAULT_PAGE_SIZE != 0 ||
+                establishments.size() < SearchQueries.DEFAULT_PAGE_SIZE ||
+                lastPageSize > 10) return;
+
         LAST_QUERY = LAST_QUERY.substring(0,LAST_QUERY.lastIndexOf("pageNumber"));
         LAST_QUERY += "pageNumber=" + (lastPageSize++);
+
         try {
             readUrl(LAST_QUERY);
         } catch (Exception e) {

@@ -31,6 +31,7 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
         this.establishments = establishments;
         this.map = map;
     }
+
     @Override
     public View getInfoWindow(Marker marker) {
         return null;

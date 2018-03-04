@@ -38,14 +38,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@drawable/adnvaced_draw"
+                android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.8"
-                    android:text="Business Name"
+                    android:text="@string/business_name"
                     android:textColor="@color/black"
                     android:textSize="15sp"
                     android:textStyle="italic" />
@@ -55,7 +55,6 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.5"
-                    android:inputType="text"
                     android:textColor="@color/black"
                     android:textSize="15sp" />
             </LinearLayout>
@@ -65,7 +64,7 @@
                 android:id="@+id/layoutCountry"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@drawable/adnvaced_draw"
+                android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
                 <TextView
@@ -73,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="0.8"
                     android:elegantTextHeight="true"
-                    android:text="Business Type"
+                    android:text="@string/business_type"
                     android:textColor="@color/black"
                     android:textSize="15sp"
                     android:textStyle="italic"/>
@@ -83,7 +82,6 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.5"
-                    android:inputType="text"
                     android:spinnerMode="dropdown"
                     android:textColor="@color/black"
                     android:textSize="15sp"/>
@@ -93,14 +91,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@drawable/adnvaced_draw"
+                android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.8"
-                    android:text="Address"
+                    android:text="@string/address"
                     android:textColor="@color/black"
                     android:textSize="15sp"
                     android:textStyle="italic" />
@@ -117,14 +115,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@drawable/adnvaced_draw"
+                android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.8"
-                    android:text="Authority"
+                    android:text="@string/authority"
                     android:textColor="@color/black"
                     android:textSize="15sp"
                     android:textStyle="italic" />
@@ -141,14 +139,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@drawable/adnvaced_draw"
+                android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.8"
-                    android:text="Authority Email"
+                    android:text="@string/auth_email"
                     android:textColor="@color/black"
                     android:textSize="15sp"
                     android:textStyle="italic" />
@@ -161,33 +159,6 @@
                     android:textColor="@color/black"
                     android:textSize="15sp" />
             </LinearLayout>
-
-            <!--<LinearLayout-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="40dp"-->
-                <!--android:background="@drawable/adnvaced_draw"-->
-                <!--android:orientation="horizontal">-->
-
-                <!--<TextView-->
-                    <!--android:layout_width="0dp"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:layout_weight="0.8"-->
-                    <!--android:text="Rating"-->
-                    <!--android:textColor="@color/black"-->
-                    <!--android:textSize="15sp"-->
-                    <!--android:textStyle="italic" />-->
-
-                <!--<ImageView-->
-                    <!--android:id="@+id/rating"-->
-                    <!--android:layout_width="0dp"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:layout_weight="1.5"-->
-                    <!--android:textColor="@color/black"-->
-                    <!--android:textSize="15sp"-->
-                    <!--android:src="@drawable/score_5"/>-->
-            <!--</LinearLayout>-->
-
-
 
         </LinearLayout>
     </ScrollView>
@@ -219,7 +190,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="15dp"
-        android:background="@drawable/adnvaced_draw"
+        android:background="@drawable/advanced_draw"
         android:text="@string/close"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -18,7 +18,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="44dp"
-        android:background="@drawable/adnvaced_draw"
+        android:background="@drawable/advanced_draw"
         android:elevation="2dp"
         android:padding="10dp"
         android:paddingBottom="50dp"
@@ -122,14 +122,14 @@
 
     <Button
         android:id="@+id/hygiene_sort"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="30dp"
-        android:layout_marginEnd="250dp"
+        android:layout_marginEnd="170dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="12dp"
         android:elevation="2dp"
         android:onClick="onHygieneSortClick"
-        android:text="Hygiene"
+        android:text="@string/hygiene"
         android:background="@drawable/button_sort"
         app:layout_constraintBottom_toTopOf="@+id/establishments"
         app:layout_constraintEnd_toEndOf="parent"
@@ -139,24 +139,25 @@
 
     <Button
         android:id="@+id/date_sort"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="30dp"
-        android:layout_marginEnd="50dp"
+        android:layout_marginEnd="30dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="12dp"
+        android:background="@drawable/button_sort"
         android:elevation="2dp"
         android:onClick="onDateSortClick"
-        android:background="@drawable/button_sort"
+        android:text="@string/date"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.539"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/searchView"
-        android:text="Date" />
+        app:layout_constraintTop_toBottomOf="@+id/searchView" />
 
     <Button
         android:id="@+id/location_sort"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="30dp"
-        android:text="Location"
+        android:text="@string/location"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="170dp"
         android:layout_marginTop="12dp"
@@ -178,5 +179,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/chef_skinner" />
+
+    <TextView
+        android:id="@+id/sort_by_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="15dp"
+        android:elevation="2dp"
+        android:text="@string/sort_by"
+        android:textSize="16sp"
+        android:textStyle="italic"
+        app:layout_constraintStart_toStartOf="@+id/establishments"
+        app:layout_constraintTop_toBottomOf="@+id/searchView" />
 
 </android.support.constraint.ConstraintLayout>
