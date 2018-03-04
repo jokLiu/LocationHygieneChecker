@@ -354,8 +354,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         onMapReady(map);
 
-
     }
+
 
 //    @Override
 //    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -454,7 +454,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.clear();
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         MarkerOptions myPosition = new MarkerOptions();
-        if (checkGpsStatus() && Double.compare(longitude, latitude) != 0) {
+        if (checkGpsStatus() && Math.abs(longitude - latitude) > 0.1) {
             myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
             googleMap.addMarker(myPosition);
@@ -470,8 +470,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             builder.include(option.getPosition());
         }
 
-        CameraUpdate camUpd = null;
-        if (establishments.size() == 0 && !checkGpsStatus()/*myPosition.getPosition() == null*/) {
+        CameraUpdate camUpd;
+        if (establishments.size() == 0 && (!checkGpsStatus() || Math.abs(longitude - latitude) < 0.1)) {
             camUpd = CameraUpdateFactory.newLatLngZoom(
                     new MarkerOptions().position(new LatLng(51.5074, 0.1278)).getPosition(), 10F);
         } else if (establishments.size() == 0) {

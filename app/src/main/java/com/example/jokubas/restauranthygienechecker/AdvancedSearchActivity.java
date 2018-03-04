@@ -9,11 +9,13 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -295,5 +297,35 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         toast.setView(view);
         toast.show();
     }
+
+
+    /**
+     * Hides the soft keyboard
+     */
+    public void hideSoftKeyboard() {
+        if (getCurrentFocus() != null) {
+            InputMethodManager inputManager = (InputMethodManager)
+                    getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (inputManager != null) {
+                inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                        InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        }
+    }
+
+
+    private void addKeyboardCloseListener(){
+        (findViewById(R.id.business_name)).setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                Log.e("CALLSD", "DSADASD" + view.getId() + b);
+                if(view.getId() == R.id.business_name && b){
+                    Log.e("CALLSD", "DSADASDfasdfsa");
+                    hideSoftKeyboard();
+                }
+            }
+        });
+    }
+
 
 }
