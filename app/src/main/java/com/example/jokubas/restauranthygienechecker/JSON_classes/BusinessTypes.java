@@ -1,4 +1,4 @@
-package com.example.jokubas.restauranthygienechecker;
+package com.example.jokubas.restauranthygienechecker.JSON_classes;
 
 import java.util.List;
 
@@ -12,9 +12,9 @@ public class BusinessTypes {
     public List<businessTypes> businessTypes;
 
     public class businessTypes {
-        int BusinessTypeId;
-        String BusinessTypeName;
-        List<links> links;
+        public int BusinessTypeId;
+        public String BusinessTypeName;
+        public List<links> links;
 
         public class links {
             String rel;

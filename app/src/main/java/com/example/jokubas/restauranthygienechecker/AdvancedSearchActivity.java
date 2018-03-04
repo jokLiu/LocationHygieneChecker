@@ -19,6 +19,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.jokubas.restauranthygienechecker.JSON_classes.AuthoritiesWrapper;
+import com.example.jokubas.restauranthygienechecker.JSON_classes.BusinessTypes;
+import com.example.jokubas.restauranthygienechecker.JSON_classes.RegionsWrapper;
+import com.example.jokubas.restauranthygienechecker.util.QueryData;
 import com.example.jokubas.restauranthygienechecker.util.QueryType;
 import com.example.jokubas.restauranthygienechecker.util.SearchQueries;
 import com.google.gson.Gson;

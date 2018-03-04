@@ -1,4 +1,4 @@
-package com.example.jokubas.restauranthygienechecker;
+package com.example.jokubas.restauranthygienechecker.JSON_classes;
 
 import java.util.List;
 
@@ -13,39 +13,39 @@ public class AuthoritiesWrapper {
         /**
          * The Local authority id.
          */
-        int LocalAuthorityId;
+        public int LocalAuthorityId;
         /**
          * The Local authority id code.
          */
-        int LocalAuthorityIdCode;
+        public int LocalAuthorityIdCode;
         /**
          * The Name.
          */
-        String Name;
+        public String Name;
         /**
          * The Friendly name.
          */
-        String FriendlyName;
+        public String FriendlyName;
         /**
          * The Url.
          */
-        String Url;
+        public String Url;
         /**
          * The Scheme url.
          */
-        String SchemeUrl;
+        public String SchemeUrl;
         /**
          * The Email.
          */
-        String Email;
+        public String Email;
         /**
          * The Region name.
          */
-        String RegionName;
+        public String RegionName;
     }
 
     /**
      * The Authorities.
      */
-    List<Authorities> authorities;
+    public List<Authorities> authorities;
 }

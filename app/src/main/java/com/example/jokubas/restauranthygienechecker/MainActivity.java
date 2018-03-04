@@ -19,7 +19,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -39,6 +38,9 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.jokubas.restauranthygienechecker.JSON_classes.Establishments;
+import com.example.jokubas.restauranthygienechecker.JSON_classes.Response;
+import com.example.jokubas.restauranthygienechecker.util.QueryData;
 import com.example.jokubas.restauranthygienechecker.util.SearchQueries;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;

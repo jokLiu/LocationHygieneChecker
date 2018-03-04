@@ -3,11 +3,11 @@ package com.example.jokubas.restauranthygienechecker;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Point;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.jokubas.restauranthygienechecker.JSON_classes.Establishments;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.Projection;
