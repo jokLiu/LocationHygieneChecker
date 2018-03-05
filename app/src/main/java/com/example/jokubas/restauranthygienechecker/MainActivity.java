@@ -66,11 +66,15 @@ import java.util.Locale;
 
 import cz.msebera.android.httpclient.Header;
 
+/**
+ * The Main activity class.
+ */
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
-
-    // TODO fix the sort options not to appear on the map
-    // longitude and latitude has to be inserted
+    private static final String PAGE_NUMBER = "pageNumber";
+    private static final String DISTANCE = "distance";
+    private static final String RATING = "rating";
+    private static String LAST_QUERY;
     private final int FINE_LOCATION_PERMISSION = 1;
     private ArrayList<Establishments> establishments = new ArrayList<>();
     private double longitude;
@@ -85,8 +89,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isSearchLocalBased;
     private boolean loadingFlag;
     private int lastPageSize;
-    private static String LAST_QUERY;
-
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -94,20 +96,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             switch (item.getItemId()) {
                 case R.id.map:
                     findViewById(R.id.chef).setVisibility(View.GONE);
-                    switchHygieneAndDate(false);
-                    switchLocation(false);
+                    switchHygieneAndDateSortButton(false);
+                    switchLocationSortButton(false);
                     showMapFragment();
                     isMapOn = true;
-                    enableChefImageBasedOnView();
+                    changeBackgroundImageBasedOnView();
                     return true;
                 case R.id.list:
                     if (establishments != null && establishments.size() > 0) {
-                        switchHygieneAndDate(true);
-                        switchLocation(true);
+                        switchHygieneAndDateSortButton(true);
+                        switchLocationSortButton(true);
                     }
                     hideMapFragment();
                     isMapOn = false;
-                    enableChefImageBasedOnView();
+                    changeBackgroundImageBasedOnView();
                     return true;
             }
             return false;
@@ -120,14 +122,57 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // setup the default flags
         isMapOn = false;
         isSearchLocalBased = true;
         loadingFlag = false;
 
+        // get the intent data and the possible data fetched from the advanced search activity
         Intent intent = getIntent();
         QueryData queryData = (QueryData) intent.getSerializableExtra(SearchQueries.QUERY_DATA);
 
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        // change the default UI visibility
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+
+        // initialise the list view adapter
+        initListViewAdapter();
+
+        // set up simple search listener
+        setSimpleSearchListener();
+
+        // set up the listener for the bottom navigation bar
+        BottomNavigationView navigation = findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        // set location listener to constantly update the location
+        setLocationListener();
+
+        // request the required permissions from the user
+        checkAndRequestPermissions();
+        requestUpdate();
+
+        // init the map fragment so that google maps could be displayed
+        map = null;
+        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapView);
+        mapFragment.getMapAsync(this);
+
+        // if the data from the intent was fetched then query the API
+        if (queryData != null) {
+            queryAdvancedSearch(queryData);
+        }
+
+        // remaining default setup
+        switchLoadingGif();
+        switchHygieneAndDateSortButton(false);
+        switchLocationSortButton(false);
+        setOnScrollListener();
+    }
+
+    /**
+     * Initialise the adapter for the establishments list.
+     */
+    private void initListViewAdapter(){
 
         // adapter for the list view of the returned responses
         estAdpt = new ArrayAdapter(this, android.R.layout.simple_selectable_list_item, establishments);
@@ -137,17 +182,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 Establishments e = (Establishments) estAdpt.getItem(position);
+
                 //We need to get the instance of the LayoutInflater, use the context of this activity
                 LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
                 //Inflate the view from a predefined XML layout (no need for root id, using entire layout)
+                if(inflater == null) return;
+                // setting appropriate text fields based on establishment data
                 View layout = inflater.inflate(R.layout.pop_up_new, null);
-
                 ((TextView) layout.findViewById(R.id.name)).setText(e.BusinessName);
                 ((TextView) layout.findViewById(R.id.type)).setText(e.BusinessType);
                 ((TextView) layout.findViewById(R.id.address)).setText(e.AddressLine1);
                 ((TextView) layout.findViewById(R.id.authority)).setText(e.LocalAuthorityName);
                 ((TextView) layout.findViewById(R.id.authority_email)).setText(e.LocalAuthorityEmailAddress);
+
+                // Ratings image is set based on the rating value of the establishment
                 ImageView rating = layout.findViewById(R.id.rating);
                 switch (e.RatingValue) {
                     case "0":
@@ -173,16 +222,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         break;
                 }
 
-                //Get the devices screen density to calculate correct pixel sizes
+                // Get the devices screen density to calculate correct pixel sizes
                 float density = MainActivity.this.getResources().getDisplayMetrics().density;
-                // create a focusable PopupWindow with the given layout and correct size
+
+                // Create a focusable PopupWindow with the given layout and correct size
                 final PopupWindow pw = new PopupWindow(layout, (int) density * 500, (int) density * 450, true);
-                //Button to close the pop-up
-                ((Button) layout.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
+
+                // Button to close the pop-up
+                layout.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         pw.dismiss();
                     }
                 });
+
                 //Set up touch closing outside of pop-up
                 pw.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
                 pw.setTouchInterceptor(new View.OnTouchListener() {
@@ -195,14 +247,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
                 pw.setOutsideTouchable(true);
+
                 // display the pop-up in the center
                 pw.showAtLocation(layout, Gravity.CENTER, 0, 0);
             }
         };
 
-
+        // set up on click listener for the list view
         establView.setOnItemClickListener(itemClickListener);
+    }
 
+
+    /**
+     * Sets the listener for simple search view so that when the
+     * search key in the keyboard layout is pressed this would be executed.
+     */
+    private void setSimpleSearchListener() {
         searchBarView = findViewById(R.id.searchView);
         searchBarView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -214,10 +274,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return false;
             }
         });
+    }
+
+    /**
+     * Checks the location permissions.
+     * If the permissions are not granted then dialog window is displayed.
+     */
+    private void checkAndRequestPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                new AlertDialog.Builder(this)
+                        .setMessage("The application is about to request access to your location.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                requestLocPerms();
+                            }
+                        })
+                        .create()
+                        .show();
+            } else {
+                requestLocPerms();
+            }
+        } else {
+            attachLocManager();
+        }
+    }
 
 
-        BottomNavigationView navigation = findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+    /**
+     * Set the location listener to update the longitude and latitude
+     */
+    private void setLocationListener() {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
@@ -238,104 +326,118 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onProviderDisabled(String s) {
             }
         };
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                new AlertDialog.Builder(this)
-                        .setMessage("The application is about to request access to your location.")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                requestLocPerms();
-                            }
-                        })
-                        .create()
-                        .show();
-            } else {
-                requestLocPerms();
-            }
-        } else {
-            attachLocManager();
-        }
-        requestUpdate();
-
-        map = null;
-        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapView);
-        mapFragment.getMapAsync(this);
-
-
-        if (queryData != null) { // use boolean from the other intent
-            queryAdvancedSearch(queryData);
-        }
-        switchLoadingGif();
-        switchHygieneAndDate(false);
-        switchLocation(false);
-        setOnScrollListener();
     }
 
+    /**
+     * Method called when the result from advanced search activity is returned
+     * <p>
+     * There are two types of advanced queries: location based and region-authority based.
+     *
+     * @param qData the data used for querying the API
+     */
     private void queryAdvancedSearch(QueryData qData) {
-        try {
-            if (qData.useLocation) {
-                readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_RADIUS_URL,
-                        qData.name, qData.maxDistanceLimit, qData.businessTypeId,
-                        qData.ratingKey, longitude, latitude, "distance", SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
+        if (qData.useLocation) {
+            readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_RADIUS_URL,
+                    qData.name, qData.maxDistanceLimit, qData.businessTypeId,
+                    qData.ratingKey, longitude, latitude, DISTANCE, SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
 
-            } else {
-                readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_URL,
-                        qData.name, qData.businessTypeId, qData.ratingKey,
-                        qData.localAuthorityId, "rating", SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
-            }
-        } catch (Exception e) {
-            // TODO handle exception
+        } else {
+            readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_URL,
+                    qData.name, qData.businessTypeId, qData.ratingKey,
+                    qData.localAuthorityId, RATING, SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
         }
-
     }
 
+    /**
+     * On simple search click.
+     * <p>
+     * Method is called when user clicks Simple search button
+     */
     public void onSimpleSearchClick() {
+        // record the initial page size
         lastPageSize = 1;
+
+        // search is not location based
         isSearchLocalBased = false;
-        enableSortOption(SortOptions.NONE);
+
+        // enable none of the sort options before data is loaded
+        setButtonPressed(SortOptions.NONE);
+
+        // hide keyboard when button is pressed
         hideSoftKeyboard();
+
+        // get the text(address) from the input view
         String address = searchBarView.getText().toString();
-        try {
-            readUrl(String.format(SearchQueries.SIMPLE_SEARCH_URL, address, lastPageSize++));
-        } catch (Exception e) {
-            // TODO handle error state or no response being returned
-        }
+
+        // read URL and update the list of establishments accordingly
+        readUrl(String.format(Locale.ENGLISH, SearchQueries.SIMPLE_SEARCH_URL, address, lastPageSize++));
     }
 
+    /**
+     * On local search click.
+     * <p>
+     * Executed when user presses the local search button.
+     *
+     * @param view the view
+     */
     public void onLocalSearchClick(View view) {
+
+        // TODO make sure that location is granted
+
+        // record the initial page size
         lastPageSize = 1;
         requestUpdate();
+
+        // search is location based
         isSearchLocalBased = true;
-        enableSortOption(SortOptions.NONE);
-        try {
-            readUrl(String.format(SearchQueries.LOCAL_SEARCH_URL, longitude, latitude, lastPageSize++));
-        } catch (Exception e) {
-            // TODO handle error state or no response being returned
-        }
+        setButtonPressed(SortOptions.NONE);
+
+        // query the API based on location
+        readUrl(String.format(Locale.ENGLISH, SearchQueries.LOCAL_SEARCH_URL,
+                longitude, latitude, lastPageSize++));
     }
 
+    /**
+     * On advanced search click.
+     * <p>
+     * Executed when user presses the advanced search button
+     *
+     * @param view the view
+     */
     public void onAdvancedSearchClick(View view) {
+        // update the configs
         lastPageSize = 1;
-        enableSortOption(SortOptions.NONE);
+        setButtonPressed(SortOptions.NONE);
         isSearchLocalBased = false;
-        Intent intent = new Intent(MainActivity.this, AdvancedSearchActivity.class);
-        startActivity(intent);
+
+        // start a new intent
+        startActivity(new Intent(MainActivity.this, AdvancedSearchActivity.class));
     }
 
-
-    private void readUrl(String urlString) throws Exception {
+    /**
+     * Query the actual API endpoint based on the url query provided.
+     *
+     * @param urlString the URL string used for querying the API.
+     */
+    private void readUrl(String urlString) {
         LAST_QUERY = urlString;
+        // turn on the loading gif
         switchLoadingGif();
+
+        // set up the HTTP client and all the required headers
         AsyncHttpClient client = new AsyncHttpClient();
         client.addHeader("x-api-version", "2");
         client.addHeader("Accept", "application/json");
+
+        // query the API and wait for the results
         client.get(urlString,
                 new TextHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String response) {
+                        // turn of the gif
                         switchLoadingGif();
+
+                        // parse the response and update the list of values
                         Gson gson = new Gson();
                         Response result = gson.fromJson(response, Response.class);
                         populateList(result);
@@ -343,25 +445,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
+                        // turn of the gif
                         switchLoadingGif();
                         // TODO figure out later
                     }
                 });
     }
 
+    /**
+     * Populate a establishments list with the new data fetched from the API.
+     *
+     * @param response the response from the API call to be added.
+     */
     private void populateList(Response response) {
+        // if the data is new, clear previous results
         if (lastPageSize <= 2)
             establishments.clear();
+
+        // add new results to the list
         establishments.addAll(response.establishments);
         estAdpt.notifyDataSetChanged();
-        enableChefImageBasedOnView();
+
+        // change the background image
+        changeBackgroundImageBasedOnView();
+
+        // based on the current view enable or disable sort buttons
         if (!isMapOn) {
-            switchLocation(true);
-            switchHygieneAndDate(true);
+            switchLocationSortButton(true);
+            switchHygieneAndDateSortButton(true);
         }
-        if (establishments.size() == 0){
+        if (establishments.size() == 0) {
             noResultsToast();
-            switchHygieneAndDate(false);
+            switchHygieneAndDateSortButton(false);
+            switchLocationSortButton(false);
         }
 
 //        for (Establishments e : establishments)
@@ -370,9 +486,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
 //            }
 
+        // update the map
         onMapReady(map);
         loadingFlag = false;
-        enableSortOption(SortOptions.NONE);
+        setButtonPressed(SortOptions.NONE);
 
     }
 
@@ -393,32 +510,48 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //    }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         if (requestCode == FINE_LOCATION_PERMISSION) {
             if (permissions.length == 1 &&
-                    permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
+                    // TODO make sure this actually works
+                    permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 attachLocManager();
             } else {
-                // Permission was denied. Display an error message.
+                // TODO Permission was denied. Display an error message.
             }
         }
     }
 
+    /**
+     * Attach location manager.
+     */
     public void attachLocManager() {
         try {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    0, 0, locationListener);
         } catch (SecurityException err) {
         }
     }
 
+    /**
+     * Request loc perms.
+     */
     public void requestLocPerms() {
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION);
+        ActivityCompat.requestPermissions(MainActivity.this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION);
     }
 
 
+    /**
+     * Request the location update to update our coordinates in the world.
+     */
     private void requestUpdate() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        // check if the permission is granted for the app
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // get the network coordinates first because it requires less time to update
             if (locationManager
                     .isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                 Location loc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -428,20 +561,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
 
+            // get the GPS coordinates
             if (locationManager
                     .isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                if (loc != null) {
+                // TODO make sure this works
+                // check if coordinates are not 0,0 because then it may indicate that
+                // coordinates are not updated so keep the network ones
+                if (loc != null && Math.abs(loc.getLatitude() - loc.getLongitude()) > 0.1) {
                     latitude = loc.getLatitude();
                     longitude = loc.getLongitude();
                 }
             }
-
-
+        } else {
+            // TODO request permission
         }
 
     }
 
+    /**
+     * show the map fragment
+     */
     private void showMapFragment() {
         onMapReady(map);
         try {
@@ -451,17 +591,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ft.show(mapFragment);
             ft.commit();
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
+    /**
+     * hide the map fragment
+     */
     private void hideMapFragment() {
         try {
             FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
+            // TODO try to add animation
             ft.hide(mapFragment);
             ft.commit();
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -512,20 +654,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     /**
-     * Hides the soft keyboard
+     * Hides the soft keyboard when executed
      */
     public void hideSoftKeyboard() {
         if (getCurrentFocus() != null) {
             InputMethodManager inputManager = (InputMethodManager)
                     getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
-                    InputMethodManager.HIDE_NOT_ALWAYS);
+            if (inputManager != null) {
+                inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                        InputMethodManager.HIDE_NOT_ALWAYS);
+            }
         }
     }
 
 
     /**
-     * Called when the user clicks a marker.
+     * Called when the user clicks a marker on the google map.
      */
     @Override
     public boolean onMarkerClick(final Marker marker) {
@@ -536,12 +680,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return true;
     }
 
+    /**
+     * Turn on/off the loading gif image when result is on its way
+     */
     private void switchLoadingGif() {
         pl.droidsonroids.gif.GifImageView world = findViewById(R.id.world);
         world.setVisibility(Math.abs(world.getVisibility() - View.GONE));
     }
 
-    private void switchHygieneAndDate(boolean on) {
+    /**
+     * Turn off/on the hygiene and date sort buttons
+     *
+     * @param on -true if button should be turned on and false otherwise
+     */
+    private void switchHygieneAndDateSortButton(boolean on) {
         Button hygiene = findViewById(R.id.hygiene_sort);
         Button date = findViewById(R.id.date_sort);
         TextView sortByText = findViewById(R.id.sort_by_text);
@@ -557,15 +709,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
-    private void switchLocation(boolean on) {
+    /**
+     * Turn off/on the location sort button
+     *
+     * @param on -true if button should be turned on and false otherwise
+     */
+    private void switchLocationSortButton(boolean on) {
         Button location = findViewById(R.id.location_sort);
         if (on && isSearchLocalBased)
             location.setVisibility(View.VISIBLE);
         else location.setVisibility(View.GONE);
     }
 
+    /**
+     * On hygiene sort click.
+     * <p>
+     * Executed when user clicks the button to sort the view based on the hygiene rating.
+     *
+     * @param view the view
+     */
     public void onHygieneSortClick(View view) {
+        // perform the sort based on the hygiene rating
         Collections.sort(establishments, new Comparator<Establishments>() {
             @Override
             public int compare(Establishments e1, Establishments e2) {
@@ -577,27 +741,43 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     return 0;
                 else if (!checkStringToInt(v1))
                     return 1;
-                else return -1;
+                return -1;
             }
         });
-        enableSortOption(SortOptions.HYGIENE);
+        setButtonPressed(SortOptions.HYGIENE);
         estAdpt.notifyDataSetChanged();
     }
 
-    // TODO check if this actually works
+    /**
+     * On location sort click.
+     * <p>
+     * Executed when user clicks the button to sort the view based on the location.
+     *
+     * @param view the view
+     */
+// TODO check if this actually works
     public void onLocationSortClick(View view) {
+        // perform the sort based on the location
         Collections.sort(establishments, new Comparator<Establishments>() {
             @Override
             public int compare(Establishments e1, Establishments e2) {
                 return (e1.Distance > e2.Distance) ? 1 : ((e1.Distance == e2.Distance) ? 0 : -1);
             }
         });
-        enableSortOption(SortOptions.LOCATION);
+        setButtonPressed(SortOptions.LOCATION);
         estAdpt.notifyDataSetChanged();
     }
 
-    // TODO check if this actually works
+    /**
+     * On date sort click.
+     * <p>
+     * Executed when user clicks the button to sort the view based on the date.
+     *
+     * @param view the view
+     */
+// TODO check if this actually works
     public void onDateSortClick(View view) {
+        // perform the sort based on the date
         Collections.sort(establishments, new Comparator<Establishments>() {
             @Override
             public int compare(Establishments e1, Establishments e2) {
@@ -617,10 +797,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return date1.compareTo(date2);
             }
         });
-        enableSortOption(SortOptions.DATE);
+        // set the button pressed
+        setButtonPressed(SortOptions.DATE);
         estAdpt.notifyDataSetChanged();
     }
 
+    /**
+     * Checking whether string is an int or not.
+     *
+     * @param value the string value to be checked.
+     * @return true if string is an int, false otherwise.
+     */
     private boolean checkStringToInt(String value) {
         try {
             Integer.parseInt(value);
@@ -630,6 +817,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    /**
+     * Displaying the error toast when no results are found
+     */
     private void noResultsToast() {
         Toast toast = new Toast(getBaseContext());
         toast.setDuration(Toast.LENGTH_LONG);
@@ -640,12 +830,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         toast.show();
     }
 
-    private void enableChefImageBasedOnView() {
+    /**
+     * Enabling or disabling the background view based on the view.
+     * If the slider is on list view and number of establishments is 0
+     * then enable it, otherwise disable the background view.
+     */
+    private void changeBackgroundImageBasedOnView() {
         if (!isMapOn && establishments.size() == 0) {
             findViewById(R.id.chef).setVisibility(View.VISIBLE);
         } else findViewById(R.id.chef).setVisibility(View.GONE);
     }
 
+    /**
+     * Checking whether the network is available for the application.
+     *
+     * @return true if internet is on, false otherwise.
+     */
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -653,13 +853,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    /**
+     * Method for checking whether the app is granted the GPS and it is currently turned on.
+     *
+     * @return true if GPS set and false otherwise.
+     */
     private boolean checkGpsStatus() {
         return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) &&
                 ((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
-    private void enableSortOption(SortOptions opt) {
+    /**
+     * Method for updating the pressed button and disabling all the others.
+     *
+     * @param opt the option of the button to be set as pressed.
+     */
+    private void setButtonPressed(SortOptions opt) {
         findViewById(R.id.hygiene_sort).setBackgroundResource(R.drawable.button_sort);
         findViewById(R.id.date_sort).setBackgroundResource(R.drawable.button_sort);
         findViewById(R.id.location_sort).setBackgroundResource(R.drawable.button_sort);
@@ -679,32 +889,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void loadAdditionalItems(){
-        if(establishments.size() % SearchQueries.DEFAULT_PAGE_SIZE != 0 ||
+    /**
+     * Method for loading additional items when user gets to the end of the current list.
+     * The max number of loads is 10 not to overfill memory of the device.
+     */
+    private void loadAdditionalItems() {
+        // Make sure that limit is not exceeded and there are more results to fetch.
+        if (establishments.size() % SearchQueries.DEFAULT_PAGE_SIZE != 0 ||
                 establishments.size() < SearchQueries.DEFAULT_PAGE_SIZE ||
                 lastPageSize > 10) return;
 
-        LAST_QUERY = LAST_QUERY.substring(0,LAST_QUERY.lastIndexOf("pageNumber"));
-        LAST_QUERY += "pageNumber=" + (lastPageSize++);
-
-        try {
-            readUrl(LAST_QUERY);
-        } catch (Exception e) {
-//            e.printStackTrace();
-        }
+        // update the last query with page size incremented
+        LAST_QUERY = LAST_QUERY.substring(0, LAST_QUERY.lastIndexOf(PAGE_NUMBER));
+        LAST_QUERY += PAGE_NUMBER + (lastPageSize++);
+        readUrl(LAST_QUERY);
 
     }
 
+    /**
+     * Sets on scroll listener for the main list view with all the establishments.
+     * <p>
+     * This method is necessary in order to load more results when user gets to the end.
+     */
     private void setOnScrollListener() {
         ((ListView) findViewById(R.id.establishments)).setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView absListView, int i) {
-
             }
 
             @Override
             public void onScroll(AbsListView absListView, int i, int i1, int i2) {
-                if (i + i1 == i2  && i2 != 0) {
+                // if we are at the end and flag is correctly set, load additional
+                if (i + i1 == i2 && i2 != 0) {
                     if (!loadingFlag) {
                         loadingFlag = true;
                         loadAdditionalItems();
@@ -715,8 +931,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    /**
+     * The enum Sort options.
+     */
     enum SortOptions {
-        HYGIENE, DATE, LOCATION, NONE
+        HYGIENE,
+        DATE,
+        LOCATION,
+        NONE
     }
 
 

@@ -19,7 +19,7 @@
     <string name="location">Location</string>
     <string name="business_name">Business Name</string>
     <string name="business_type">Type of Business</string>
-    <string name="hygiene_rating">Hygiene Rating</string>
+    <string name="hygiene_rating">Hygiene Rating (from)</string>
     <string name="checkbox">Use Current Location</string>
     <string name="region">Region</string>
     <string name="authority">Authority</string>
@@ -28,6 +28,7 @@
 
 
     <string-array name="ratings">
+        <!--<item>Radius</item>-->
         <item>0</item>
         <item>1</item>
         <item>2</item>

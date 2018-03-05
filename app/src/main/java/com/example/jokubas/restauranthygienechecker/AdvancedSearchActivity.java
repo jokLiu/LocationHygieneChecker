@@ -335,7 +335,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     private boolean checkGpsStatus() {
         LocationManager locationManager = (LocationManager) getApplicationContext().
                 getSystemService(Context.LOCATION_SERVICE);
-        return locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ;
+        return locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
     /**
@@ -354,7 +354,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         LayoutInflater inflater = (LayoutInflater) getBaseContext().
                 getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater != null ? inflater.inflate(R.layout.toast, null) : null;
-        if(view != null)
+        if (view != null)
             ((TextView) view.findViewById(R.id.error_message)).setText(errorMessage);
         toast.setView(view);
         toast.show();

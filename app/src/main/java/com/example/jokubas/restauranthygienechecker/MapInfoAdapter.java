@@ -18,14 +18,22 @@ import java.util.ArrayList;
 
 /**
  * Created by jokubas on 28/02/18.
+ * <p>
+ * Class for implementing custom marker view for the google maps.
  */
-
 public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
 
     private Activity context;
     private ArrayList<Establishments> establishments;
     private GoogleMap map;
 
+    /**
+     * Instantiates a new Map info adapter.
+     *
+     * @param context        the context
+     * @param establishments the establishments
+     * @param map            the map
+     */
     public MapInfoAdapter(Activity context, ArrayList<Establishments> establishments, GoogleMap map){
         this.context = context;
         this.establishments = establishments;
@@ -40,7 +48,8 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
     @SuppressLint("ResourceType")
     @Override
     public View getInfoContents(Marker marker) {
-        View layout = context.getLayoutInflater().inflate(R.layout.map_pop_up, null);
+
+        // find the selected establishment based on the title of the marker
         Establishments selectedEst = null;
         for(Establishments e : establishments) {
             if(marker.getTitle().equals(e.BusinessName)){
@@ -49,15 +58,18 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
             }
         }
 
+        // if match was not found just return null
         if(selectedEst == null) return null;
 
+        // set text fields for the adapter based on the data from selected establishment
+        View layout = context.getLayoutInflater().inflate(R.layout.map_pop_up, null);
         ((TextView) layout.findViewById(R.id.name)).setText(selectedEst.BusinessName);
         ((TextView) layout.findViewById(R.id.type)).setText(selectedEst.BusinessType);
         ((TextView) layout.findViewById(R.id.address)).setText(selectedEst.AddressLine1);
         ((TextView) layout.findViewById(R.id.authority)).setText(selectedEst.LocalAuthorityName);
         ((TextView) layout.findViewById(R.id.authority_email)).setText(selectedEst.LocalAuthorityEmailAddress);
-//        ((TextView) layout.findViewById(R.id.rating)).setText(selectedEst.RatingValue);
 
+        // based on the rating value set the appropriate image
         ImageView rating = layout.findViewById(R.id.rating);
         switch (selectedEst.RatingValue){
             case "0":
@@ -83,9 +95,9 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
                 break;
         }
 
+        // show the marker and move the camera appropriately
         Projection projection = map.getProjection();
         LatLng markerPosition = marker.getPosition();
-
         Point markerPoint = projection.toScreenLocation(markerPosition);
         android.support.constraint.ConstraintLayout view = context.findViewById(R.id.container);
         Point targetPoint = new Point(markerPoint.x, markerPoint.y - (view.getHeight()*2/7));
