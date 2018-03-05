@@ -8,12 +8,12 @@
     <string name="title_activity_maps">Map</string>
     <string name="search">Search</string>
     <string name="no_results">No results found...</string>
-    <string name="no_authority">No authority was selected... Please select authority and try again</string>
+    <string name="no_authority">No authority was selected... Please select authority and try again.</string>
     <string name="not_enabled">"GPS is not enabled"</string>
     <string name="close">Close</string>
     <string name="hint">Radius</string>
     <string name="sort_by">Sort By:</string>
-    <string name="failed_query">Fetching data failed... Please try again</string>
+    <string name="failed_query">Fetching data failed... Please try again.</string>
     <string name="hygiene">Hygiene</string>
     <string name="date">Date</string>
     <string name="location">Location</string>
@@ -25,6 +25,9 @@
     <string name="authority">Authority</string>
     <string name="address">Address</string>
     <string name="auth_email">Authority Email</string>
+    <string name="network_off">No internet connection... Please turn on the internet and try again.</string>
+    <string name="no_permission">Without permissions the functionality of the application will be limited.</string>
+    <string name="no_gps">Your GPS is turned off or you did not grant the Location permissions for the application.</string>
 
 
     <string-array name="ratings">

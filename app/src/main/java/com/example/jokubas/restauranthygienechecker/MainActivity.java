@@ -2,7 +2,6 @@ package com.example.jokubas.restauranthygienechecker;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
@@ -17,7 +16,6 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -71,7 +69,7 @@ import cz.msebera.android.httpclient.Header;
  */
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
-    private static final String PAGE_NUMBER = "pageNumber";
+    private static final String PAGE_NUMBER = "pageNumber=";
     private static final String DISTANCE = "distance";
     private static final String RATING = "rating";
     private static String LAST_QUERY;
@@ -89,6 +87,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isSearchLocalBased;
     private boolean loadingFlag;
     private int lastPageSize;
+    private static final double LONDON_LONGITUDE = -0.141099;
+    private static final double LONDON_LATITUDE = 51.515419;
+
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -172,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Initialise the adapter for the establishments list.
      */
-    private void initListViewAdapter(){
+    private void initListViewAdapter() {
 
         // adapter for the list view of the returned responses
         estAdpt = new ArrayAdapter(this, android.R.layout.simple_selectable_list_item, establishments);
@@ -187,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
                 //Inflate the view from a predefined XML layout (no need for root id, using entire layout)
-                if(inflater == null) return;
+                if (inflater == null) return;
                 // setting appropriate text fields based on establishment data
                 View layout = inflater.inflate(R.layout.pop_up_new, null);
                 ((TextView) layout.findViewById(R.id.name)).setText(e.BusinessName);
@@ -283,17 +284,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void checkAndRequestPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                new AlertDialog.Builder(this)
-                        .setMessage("The application is about to request access to your location.")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                requestLocPerms();
-                            }
-                        })
-                        .create()
-                        .show();
-            } else {
                 requestLocPerms();
             }
         } else {
@@ -382,7 +372,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     public void onLocalSearchClick(View view) {
 
-        // TODO make sure that location is granted
+        // if GPS is disabled abort with error message
+        if (!checkGpsStatus() ) {
+            errorToast(R.string.no_gps);
+            return;
+        }
 
         // record the initial page size
         lastPageSize = 1;
@@ -420,6 +414,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param urlString the URL string used for querying the API.
      */
     private void readUrl(String urlString) {
+        // check if internet connection is turned on
+        if (!isNetworkAvailable()) {
+            errorToast(R.string.network_off);
+            return;
+        }
+
+
         LAST_QUERY = urlString;
         // turn on the loading gif
         switchLoadingGif();
@@ -447,7 +448,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
                         // turn of the gif
                         switchLoadingGif();
-                        // TODO figure out later
+                        errorToast(R.string.failed_query);
                     }
                 });
     }
@@ -475,7 +476,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             switchHygieneAndDateSortButton(true);
         }
         if (establishments.size() == 0) {
-            noResultsToast();
+            errorToast(R.string.no_results);
             switchHygieneAndDateSortButton(false);
             switchLocationSortButton(false);
         }
@@ -494,32 +495,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-//        switch (requestCode) {
-//            case FINE_LOCATION_PERMISSION: {
-//                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    attachLocManager();
-//                } else {
-//                }
-//                return;
-//            }
-//        }
-//
-//
-//    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         if (requestCode == FINE_LOCATION_PERMISSION) {
             if (permissions.length == 1 &&
-                    // TODO make sure this actually works
                     permissions[0].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 attachLocManager();
             } else {
-                // TODO Permission was denied. Display an error message.
+                errorToast(R.string.no_permission);
             }
         }
     }
@@ -565,7 +550,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (locationManager
                     .isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                // TODO make sure this works
+
                 // check if coordinates are not 0,0 because then it may indicate that
                 // coordinates are not updated so keep the network ones
                 if (loc != null && Math.abs(loc.getLatitude() - loc.getLongitude()) > 0.1) {
@@ -573,8 +558,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     longitude = loc.getLongitude();
                 }
             }
-        } else {
-            // TODO request permission
         }
 
     }
@@ -600,21 +583,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void hideMapFragment() {
         try {
             FragmentTransaction ft = mapFragment.getFragmentManager().beginTransaction();
-            // TODO try to add animation
             ft.hide(mapFragment);
             ft.commit();
         } catch (Exception e) {
         }
     }
 
-    // TODO fix this method
+    /**
+     * The main method controlling the google map
+     * @param googleMap
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        // if map is null it means that onMapReady was not called
         if (map == null) hideMapFragment();
 
+        // initialise map
         map = googleMap;
+
+        //clear all the items from map
         map.clear();
+
+        // init builder
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+        // start marker options and add the current location
         MarkerOptions myPosition = new MarkerOptions();
         if (checkGpsStatus() && Math.abs(longitude - latitude) > 0.1) {
             myPosition.position(new LatLng(latitude, longitude)).title("Your Current Location").
@@ -623,6 +616,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             builder.include(myPosition.getPosition());
         }
 
+        // add all the establishments to the map
         for (Establishments e : establishments) {
             if (e.geocode.longitude == null || e.geocode.latitude == null) continue;
             MarkerOptions option = new MarkerOptions();
@@ -632,10 +626,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             builder.include(option.getPosition());
         }
 
+        // update the camera based on the situation
         CameraUpdate camUpd;
         if (establishments.size() == 0 && (!checkGpsStatus() || Math.abs(longitude - latitude) < 0.1)) {
             camUpd = CameraUpdateFactory.newLatLngZoom(
-                    new MarkerOptions().position(new LatLng(51.5074, 0.1278)).getPosition(), 10F);
+                    new MarkerOptions().position(new LatLng(LONDON_LATITUDE, LONDON_LONGITUDE)).getPosition(), 10F);
         } else if (establishments.size() == 0) {
             camUpd = CameraUpdateFactory.newLatLngZoom(
                     new MarkerOptions().position(new LatLng(latitude, longitude)).getPosition(), 10F);
@@ -644,6 +639,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             camUpd = CameraUpdateFactory.newLatLngBounds(bounds, 0);
         }
 
+        // animate the camera zoom in and set specific parameters
         map.getUiSettings().setCompassEnabled(true);
         map.getUiSettings().setMapToolbarEnabled(true);
         map.setPadding(80, 250, 80, 350);
@@ -755,7 +751,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      *
      * @param view the view
      */
-// TODO check if this actually works
     public void onLocationSortClick(View view) {
         // perform the sort based on the location
         Collections.sort(establishments, new Comparator<Establishments>() {
@@ -764,6 +759,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return (e1.Distance > e2.Distance) ? 1 : ((e1.Distance == e2.Distance) ? 0 : -1);
             }
         });
+
         setButtonPressed(SortOptions.LOCATION);
         estAdpt.notifyDataSetChanged();
     }
@@ -775,7 +771,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      *
      * @param view the view
      */
-// TODO check if this actually works
     public void onDateSortClick(View view) {
         // perform the sort based on the date
         Collections.sort(establishments, new Comparator<Establishments>() {
@@ -794,9 +789,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 } catch (ParseException e) {
                     return 1;
                 }
-                return date1.compareTo(date2);
+                return date2.compareTo(date1);
             }
         });
+
         // set the button pressed
         setButtonPressed(SortOptions.DATE);
         estAdpt.notifyDataSetChanged();
@@ -818,14 +814,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Displaying the error toast when no results are found
+     * Method for displaying the specific toast message based on
+     * the string id passed as a parameter.
+     *
+     * @param errorMessage the id of the string to be displayed in the message.
      */
-    private void noResultsToast() {
+    private void errorToast(int errorMessage) {
+        // create toast and set the specific settings
         Toast toast = new Toast(getBaseContext());
         toast.setDuration(Toast.LENGTH_LONG);
         toast.setGravity(Gravity.CENTER, 0, 0);
-        LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.toast, null);
+
+        // get the inflater and set the custom layout for the toast
+        LayoutInflater inflater = (LayoutInflater) getBaseContext().
+                getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater != null ? inflater.inflate(R.layout.toast, null) : null;
+        if (view != null)
+            ((TextView) view.findViewById(R.id.error_message)).setText(errorMessage);
         toast.setView(view);
         toast.show();
     }
@@ -849,7 +854,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        NetworkInfo activeNetworkInfo = null;
+        if (connectivityManager != null) {
+            activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        }
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 

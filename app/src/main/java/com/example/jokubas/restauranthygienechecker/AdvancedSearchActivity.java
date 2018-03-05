@@ -1,9 +1,14 @@
 package com.example.jokubas.restauranthygienechecker;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
@@ -108,14 +113,20 @@ public class AdvancedSearchActivity extends AppCompatActivity {
      * @param view the view
      */
     public void onClickSearch(View view) {
+        // intent from the current activity back to the main activity
+        Intent intent = new Intent(AdvancedSearchActivity.this, MainActivity.class);
 
-        // TODO check if the data was fetched from the internet
+        // Check whether the internet is turned on
+        if(!isNetworkAvailable()){
+            errorToast(R.string.network_off);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         // Query data to be passed between different activities
         QueryData dataToPass = new QueryData();
 
-        // intent from the current activity back to the main activity
-        Intent intent = new Intent(AdvancedSearchActivity.this, MainActivity.class);
 
         // set the business name to the data to be passed
         dataToPass.name = businessNameView.getText().toString();
@@ -140,11 +151,10 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         // ones own location for finding the establishments
         if (checkBox.isChecked()) {
 
-            // TODO CHECK WHETHER LOCATION ACTUALLY EXISTS AND IS ENABLED
             // check whether the GPS status is actually enabled and we can use it
             // if it is not the case display error message and abort
             if (!checkGpsStatus()) {
-                noResultsToast(R.string.not_enabled);
+                errorToast(R.string.not_enabled);
                 return;
             }
 
@@ -156,12 +166,12 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         // if checkBox is not checked, it means that user is going to use
         // region and local authority from the spinners
         else {
-            // TODO exception when no input
+
             // check whether authority was selected, if not display
             // the error message and abort further actions
             int position = authoritiesView.getSelectedItemPosition();
             if (position < 0) {
-                noResultsToast(R.string.no_authority);
+                errorToast(R.string.no_authority);
                 return;
             }
 
@@ -208,7 +218,6 @@ public class AdvancedSearchActivity extends AppCompatActivity {
      */
     private void manageCheckBox() {
         if (checkBox.isChecked()) {
-            // TODO if current location is used make sure that user gave access to the GPS
             radiusView.setEnabled(true);
             regionView.setEnabled(false);
             authoritiesView.setEnabled(false);
@@ -256,7 +265,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
             @Override
             public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
                 // display error message in case something went wrong
-                noResultsToast(R.string.failed_query);
+                errorToast(R.string.failed_query);
             }
         });
     }
@@ -326,16 +335,14 @@ public class AdvancedSearchActivity extends AppCompatActivity {
 
 
     /**
-     * Check the GPS status of the smartphone.
-     * If GPS is enabled and we are granted the permission true is
-     * returned, false otherwise.
+     * Method for checking whether the app is granted the GPS and it is currently turned on.
      *
-     * @return true if GPS is enables, false otherwise
+     * @return true if GPS set and false otherwise.
      */
     private boolean checkGpsStatus() {
-        LocationManager locationManager = (LocationManager) getApplicationContext().
-                getSystemService(Context.LOCATION_SERVICE);
-        return locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) &&
+                ((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
     /**
@@ -344,7 +351,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
      *
      * @param errorMessage the id of the string to be displayed in the message.
      */
-    private void noResultsToast(int errorMessage) {
+    private void errorToast(int errorMessage) {
         // create toast and set the specific settings
         Toast toast = new Toast(getBaseContext());
         toast.setDuration(Toast.LENGTH_LONG);
@@ -387,6 +394,23 @@ public class AdvancedSearchActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+
+    /**
+     * Checking whether the network is available for the application.
+     *
+     * @return true if internet is on, false otherwise.
+     */
+    private boolean isNetworkAvailable() {
+        Log.e("string","casdfasdf");
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = null;
+        if (connectivityManager != null) {
+            activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        }
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
 
