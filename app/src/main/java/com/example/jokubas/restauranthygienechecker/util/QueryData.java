@@ -12,7 +12,7 @@ import java.io.Serializable;
  */
 public class QueryData implements Serializable {
     public String name;
-    public int businessTypeId;
+    public String businessTypeId;
     public String ratingKey;
     public int localAuthorityId;
     public int maxDistanceLimit;

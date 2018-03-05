@@ -7,13 +7,13 @@ package com.example.jokubas.restauranthygienechecker.util;
  */
 public class SearchQueries {
     public static final String ADVANCED_SEARCH_URL = "http://api.ratings.food.gov.uk/Establishments?"+
-            "name=%s&businessTypeId=%d&"+
+            "name=%s&businessTypeId=%s&"+
             "schemeTypeKey=FHRS&ratingKey=%s&ratingOperatorKey=GreaterThanOrEqual&"+
             "localAuthorityId=%d&"+
             "sortOptionKey=%s&pageSize=%d&pageNumber=%d";
 
     public static final String ADVANCED_SEARCH_RADIUS_URL = "http://api.ratings.food.gov.uk/Establishments?"+
-            "name=%s&maxDistanceLimit=%d&businessTypeId=%d&"+
+            "name=%s&maxDistanceLimit=%d&businessTypeId=%s&"+
             "schemeTypeKey=FHRS&ratingKey=%s&ratingOperatorKey=GreaterThanOrEqual&"+
             "longitude=%f&latitude=%f&" +
             "sortOptionKey=%s&pageSize=%d&pageNumber=%d";

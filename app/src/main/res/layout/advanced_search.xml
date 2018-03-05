@@ -110,7 +110,7 @@
                     android:id="@+id/rating_high"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.5"
+                    android:layout_weight="1"
                     android:inputType="text"
                     android:entries="@array/ratings"
                     android:textColor="@color/black"
@@ -137,7 +137,7 @@
                     android:id="@+id/radius_spinner"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.5"
+                    android:layout_weight="1"
                     android:entries="@array/radius"
                     android:inputType="text"
                     android:textColor="@color/black"
@@ -224,6 +224,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/chef_skinner" />
+
 
 
 </android.support.constraint.ConstraintLayout>

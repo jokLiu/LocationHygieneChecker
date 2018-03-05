@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -14,6 +15,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -54,7 +56,6 @@ public class AdvancedSearchActivity extends AppCompatActivity {
     private List<AuthoritiesWrapper.Authorities> authoritiesStorage;
     private EditText businessNameView;
     private Spinner businessTypeView;
-    private Spinner ratingLowView;
     private Spinner ratingHighView;
     private CheckBox checkBox;
     private Spinner radiusView;
@@ -70,7 +71,6 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         // initialise all the views for later usage
         businessNameView = findViewById(R.id.business_name);
         businessTypeView = findViewById(R.id.type_of_business);
-//        ratingLowView = findViewById(R.id.rating_low);
         ratingHighView = findViewById(R.id.rating_high);
         checkBox = findViewById(R.id.current_loc_check_box);
         radiusView = findViewById(R.id.radius_spinner);
@@ -102,9 +102,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         // depending on whether checkBox is checked or not
         // we enable or disable appropriate views
         manageCheckBox();
-
     }
-
 
     /**
      * On click search.
@@ -117,7 +115,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         Intent intent = new Intent(AdvancedSearchActivity.this, MainActivity.class);
 
         // Check whether the internet is turned on
-        if(!isNetworkAvailable()){
+        if (!isNetworkAvailable()) {
             errorToast(R.string.network_off);
             startActivity(intent);
             finish();
@@ -132,11 +130,15 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         dataToPass.name = businessNameView.getText().toString();
 
         // set business type id, -1 indicates failure
-        dataToPass.businessTypeId = -1;
+        dataToPass.businessTypeId = "";
+        int bTypeId = -1;
         String type = businessTypesSpinner.get(businessTypeView.getSelectedItemPosition());
         for (BusinessTypes.businessTypes b : businessTypesStorage)
-            dataToPass.businessTypeId = b.BusinessTypeName.equals(type) ?
-                    b.BusinessTypeId : dataToPass.businessTypeId;
+            bTypeId = b.BusinessTypeName.equals(type) ?
+                    b.BusinessTypeId : bTypeId;
+
+        if(bTypeId  > 0)
+            dataToPass.businessTypeId = String.valueOf(bTypeId);
 
         // set rating value
         dataToPass.ratingKey = ratingHighView.getSelectedItem().toString();
@@ -403,7 +405,7 @@ public class AdvancedSearchActivity extends AppCompatActivity {
      * @return true if internet is on, false otherwise.
      */
     private boolean isNetworkAvailable() {
-        Log.e("string","casdfasdf");
+        Log.e("string", "casdfasdf");
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = null;

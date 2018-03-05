@@ -327,11 +327,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private void queryAdvancedSearch(QueryData qData) {
         if (qData.useLocation) {
+            isSearchLocalBased = true;
             readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_RADIUS_URL,
                     qData.name, qData.maxDistanceLimit, qData.businessTypeId,
                     qData.ratingKey, longitude, latitude, DISTANCE, SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
 
         } else {
+            isSearchLocalBased = false;
             readUrl(String.format(Locale.ENGLISH, SearchQueries.ADVANCED_SEARCH_URL,
                     qData.name, qData.businessTypeId, qData.ratingKey,
                     qData.localAuthorityId, RATING, SearchQueries.DEFAULT_PAGE_SIZE, lastPageSize++));
