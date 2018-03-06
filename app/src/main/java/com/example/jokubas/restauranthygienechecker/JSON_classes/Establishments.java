@@ -34,7 +34,7 @@ public class Establishments {
     public String RightToReply;
     public double Distance;
     public boolean NewRatingPending;
-    
+
     @Override
     public boolean equals(Object e2){
         return FHRSID==((Establishments)e2).FHRSID;
