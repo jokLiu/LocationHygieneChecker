@@ -10,7 +10,7 @@
     android:background="@drawable/back">
 
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/searchView"
         android:layout_width="355dp"
         android:layout_height="50dp"
@@ -26,7 +26,7 @@
         android:paddingRight="5dp"
         android:paddingTop="5dp"
         android:textColor="#000000"
-        android:inputType="text"
+        android:inputType="text|textAutoCorrect"
         android:imeOptions="actionSearch"
         android:icon="@drawable/ab_back"
         android:showAsAction="ifRoom|collapseActionView"

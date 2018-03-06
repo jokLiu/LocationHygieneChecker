@@ -14,7 +14,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/scrollView2"
         android:layout_width="380dp"
-        android:layout_height="210dp"
+        android:layout_height="260dp"
         android:layout_marginBottom="80dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -37,7 +37,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="50dp"
                 android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
@@ -63,7 +63,7 @@
             <LinearLayout
                 android:id="@+id/layoutCountry"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="50dp"
                 android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
@@ -90,7 +90,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="50dp"
                 android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
@@ -114,7 +114,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="50dp"
                 android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 
@@ -138,7 +138,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="50dp"
                 android:background="@drawable/advanced_draw"
                 android:orientation="horizontal">
 

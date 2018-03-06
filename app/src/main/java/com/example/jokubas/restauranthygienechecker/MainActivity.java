@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -28,6 +29,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -54,12 +56,17 @@ import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 import cz.msebera.android.httpclient.Header;
@@ -168,6 +175,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switchHygieneAndDateSortButton(false);
         switchLocationSortButton(false);
         setOnScrollListener();
+
+        setAutocompleteTextInput();
     }
 
     /**
@@ -227,7 +236,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 float density = MainActivity.this.getResources().getDisplayMetrics().density;
 
                 // Create a focusable PopupWindow with the given layout and correct size
-                final PopupWindow pw = new PopupWindow(layout, (int) density * 500, (int) density * 450, true);
+                final PopupWindow pw = new PopupWindow(layout, (int) density * 500, (int) density * 480, true);
 
                 // Button to close the pop-up
                 layout.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
@@ -250,12 +259,48 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 pw.setOutsideTouchable(true);
 
                 // display the pop-up in the center
-                pw.showAtLocation(layout, Gravity.CENTER, 0, 0);
+                pw.showAtLocation(layout, Gravity.CENTER | Gravity.TOP, 0, 400);
+
             }
         };
 
         // set up on click listener for the list view
         establView.setOnItemClickListener(itemClickListener);
+    }
+
+    /**
+     *  Method for setting the autocomplete text view based on the values from
+     *  the provided file which contains a list of common establishments and
+     *  locations.
+     */
+    private void setAutocompleteTextInput(){
+
+        // initialise the establishment
+        BufferedReader reader = null ;
+        try {
+            reader = new BufferedReader( new InputStreamReader(getAssets().open("suggestions.txt")));
+        } catch (Exception e) {
+            // failed to read file, abort this action
+            return;
+        }
+
+        // read a file and add all the elements to the list of suggestions
+        List<String> list = new LinkedList<>();
+        String line;
+        try {
+            while ((line = reader.readLine()) !=null){
+                list.add(line);
+            }
+        }catch (IOException e){
+           // do nothing, continue with the list we currently have
+        }
+
+        // set up the adapter
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, list);
+        AutoCompleteTextView textView = findViewById(R.id.searchView);
+        textView.setAdapter(adapter);
+
     }
 
 

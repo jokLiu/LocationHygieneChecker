@@ -100,7 +100,7 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
         LatLng markerPosition = marker.getPosition();
         Point markerPoint = projection.toScreenLocation(markerPosition);
         android.support.constraint.ConstraintLayout view = context.findViewById(R.id.container);
-        Point targetPoint = new Point(markerPoint.x, markerPoint.y - (view.getHeight()*2/7));
+        Point targetPoint = new Point(markerPoint.x+23, markerPoint.y - (view.getHeight()*2/7));
         LatLng targetPosition = projection.fromScreenLocation(targetPoint);
         map.animateCamera(CameraUpdateFactory.newLatLng(targetPosition), 1000, null);
 
