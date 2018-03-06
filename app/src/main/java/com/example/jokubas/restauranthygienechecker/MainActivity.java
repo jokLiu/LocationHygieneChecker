@@ -203,9 +203,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 StringBuilder address = new StringBuilder();
                 if (!e.AddressLine1.equals("")) address.append(e.AddressLine1);
-                if (!e.AddressLine2.equals("")) address.append(", ").append(e.AddressLine2);
-                if (!e.AddressLine3.equals("")) address.append(", ").append(e.AddressLine3);
-                if (!e.AddressLine4.equals("")) address.append(", ").append(e.AddressLine4);
+                if (!e.AddressLine2.equals("")) {
+                    if(!address.toString().equals(""))address.append(", ");
+                    address.append(e.AddressLine2);
+                }
+                if (!e.AddressLine3.equals("")){
+                    if(!address.toString().equals(""))address.append(", ");
+                    address.append(e.AddressLine3);
+                }
+                if (!e.AddressLine4.equals("")){
+                    if(!address.toString().equals(""))address.append(", ");
+                    address.append(e.AddressLine4);
+                }
                 ((TextView) layout.findViewById(R.id.address)).setText(address.toString());
                 ((TextView) layout.findViewById(R.id.authority)).setText(e.LocalAuthorityName);
                 ((TextView) layout.findViewById(R.id.authority_email)).setText(e.LocalAuthorityEmailAddress);

@@ -51,7 +51,7 @@
                     android:textSize="17sp"
                     android:textStyle="italic" />
 
-                <EditText
+                <AutoCompleteTextView
                     android:id="@+id/business_name"
                     android:layout_width="0dp"
                     android:layout_height="40dp"

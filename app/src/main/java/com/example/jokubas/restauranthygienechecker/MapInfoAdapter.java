@@ -65,7 +65,21 @@ public class MapInfoAdapter  implements GoogleMap.InfoWindowAdapter {
         View layout = context.getLayoutInflater().inflate(R.layout.map_pop_up, null);
         ((TextView) layout.findViewById(R.id.name)).setText(selectedEst.BusinessName);
         ((TextView) layout.findViewById(R.id.type)).setText(selectedEst.BusinessType);
-        ((TextView) layout.findViewById(R.id.address)).setText(selectedEst.AddressLine1);
+        StringBuilder address = new StringBuilder();
+        if (!selectedEst.AddressLine1.equals("")) address.append(selectedEst.AddressLine1);
+        if (!selectedEst.AddressLine2.equals("")) {
+            if(!address.toString().equals(""))address.append(", ");
+            address.append(selectedEst.AddressLine2);
+        }
+        if (!selectedEst.AddressLine3.equals("")){
+            if(!address.toString().equals(""))address.append(", ");
+            address.append(selectedEst.AddressLine3);
+        }
+        if (!selectedEst.AddressLine4.equals("")){
+            if(!address.toString().equals(""))address.append(", ");
+            address.append(selectedEst.AddressLine4);
+        }
+        ((TextView) layout.findViewById(R.id.address)).setText(address.toString());
         ((TextView) layout.findViewById(R.id.authority)).setText(selectedEst.LocalAuthorityName);
         ((TextView) layout.findViewById(R.id.authority_email)).setText(selectedEst.LocalAuthorityEmailAddress);
 

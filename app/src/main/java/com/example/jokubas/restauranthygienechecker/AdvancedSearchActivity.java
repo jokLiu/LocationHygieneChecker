@@ -13,12 +13,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -36,7 +39,11 @@ import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -102,6 +109,9 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         // depending on whether checkBox is checked or not
         // we enable or disable appropriate views
         manageCheckBox();
+
+        setAutocompleteTextInput();
+        setEditorListener();
     }
 
     /**
@@ -199,6 +209,58 @@ public class AdvancedSearchActivity extends AppCompatActivity {
         finish();
 
     }
+
+    private void setEditorListener(){
+        ((AutoCompleteTextView)findViewById(R.id.business_name)).
+                setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_NONE) {
+                    hideSoftKeyboard();
+                    return true;
+                }
+
+                return false;
+            }
+
+        });
+    }
+
+    /**
+     * Method for setting the autocomplete text view based on the values from
+     * the provided file which contains a list of common establishments and
+     * locations.
+     */
+    private void setAutocompleteTextInput() {
+
+        // initialise the establishment
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(getAssets().open("suggestions.txt")));
+        } catch (Exception e) {
+            // failed to read file, abort this action
+            return;
+        }
+
+        // read a file and add all the elements to the list of suggestions
+        List<String> list = new LinkedList<>();
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                list.add(line);
+            }
+        } catch (IOException e) {
+            // do nothing, continue with the list we currently have
+        }
+
+        // set up the adapter
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, list);
+        AutoCompleteTextView textView = findViewById(R.id.business_name);
+        textView.setAdapter(adapter);
+
+    }
+
 
     /**
      * On click check box.
