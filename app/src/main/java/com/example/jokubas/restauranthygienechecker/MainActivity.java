@@ -11,7 +11,6 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -79,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String PAGE_NUMBER = "pageNumber=";
     private static final String DISTANCE = "distance";
     private static final String RATING = "rating";
+    private static final double LONDON_LONGITUDE = -0.141099;
+    private static final double LONDON_LATITUDE = 51.515419;
     private static String LAST_QUERY;
     private final int FINE_LOCATION_PERMISSION = 1;
     private ArrayList<Establishments> establishments = new ArrayList<>();
@@ -94,9 +95,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isSearchLocalBased;
     private boolean loadingFlag;
     private int lastPageSize;
-    private static final double LONDON_LONGITUDE = -0.141099;
-    private static final double LONDON_LATITUDE = 51.515419;
-
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -202,7 +200,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 View layout = inflater.inflate(R.layout.pop_up_new, null);
                 ((TextView) layout.findViewById(R.id.name)).setText(e.BusinessName);
                 ((TextView) layout.findViewById(R.id.type)).setText(e.BusinessType);
-                ((TextView) layout.findViewById(R.id.address)).setText(e.AddressLine1);
+
+                StringBuilder address = new StringBuilder();
+                if (!e.AddressLine1.equals("")) address.append(e.AddressLine1);
+                if (!e.AddressLine2.equals("")) address.append(", ").append(e.AddressLine2);
+                if (!e.AddressLine3.equals("")) address.append(", ").append(e.AddressLine3);
+                if (!e.AddressLine4.equals("")) address.append(", ").append(e.AddressLine4);
+                ((TextView) layout.findViewById(R.id.address)).setText(address.toString());
                 ((TextView) layout.findViewById(R.id.authority)).setText(e.LocalAuthorityName);
                 ((TextView) layout.findViewById(R.id.authority_email)).setText(e.LocalAuthorityEmailAddress);
 
@@ -269,16 +273,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     *  Method for setting the autocomplete text view based on the values from
-     *  the provided file which contains a list of common establishments and
-     *  locations.
+     * Method for setting the autocomplete text view based on the values from
+     * the provided file which contains a list of common establishments and
+     * locations.
      */
-    private void setAutocompleteTextInput(){
+    private void setAutocompleteTextInput() {
 
         // initialise the establishment
-        BufferedReader reader = null ;
+        BufferedReader reader = null;
         try {
-            reader = new BufferedReader( new InputStreamReader(getAssets().open("suggestions.txt")));
+            reader = new BufferedReader(new InputStreamReader(getAssets().open("suggestions.txt")));
         } catch (Exception e) {
             // failed to read file, abort this action
             return;
@@ -288,11 +292,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         List<String> list = new LinkedList<>();
         String line;
         try {
-            while ((line = reader.readLine()) !=null){
+            while ((line = reader.readLine()) != null) {
                 list.add(line);
             }
-        }catch (IOException e){
-           // do nothing, continue with the list we currently have
+        } catch (IOException e) {
+            // do nothing, continue with the list we currently have
         }
 
         // set up the adapter
@@ -420,7 +424,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onLocalSearchClick(View view) {
 
         // if GPS is disabled abort with error message
-        if (!checkGpsStatus() ) {
+        if (!checkGpsStatus()) {
             errorToast(R.string.no_gps);
             return;
         }
@@ -638,6 +642,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * The main method controlling the google map
+     *
      * @param googleMap
      */
     @Override
