@@ -17,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -64,9 +65,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -94,7 +97,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isMapOn;
     private boolean isSearchLocalBased;
     private boolean loadingFlag;
+    private boolean isSearchSimple;
     private int lastPageSize;
+    private int lastPageSizeSimpleSearch;
+    private boolean wasSimpleExecuted;
+
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -132,6 +139,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         isMapOn = false;
         isSearchLocalBased = true;
         loadingFlag = false;
+        isSearchSimple = false;
+        wasSimpleExecuted = false;
 
         // get the intent data and the possible data fetched from the advanced search activity
         Intent intent = getIntent();
@@ -406,9 +415,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onSimpleSearchClick() {
         // record the initial page size
         lastPageSize = 1;
+        lastPageSizeSimpleSearch = 1;
 
         // search is not location based
         isSearchLocalBased = false;
+        isSearchSimple = true;
+        wasSimpleExecuted = false;
 
         // enable none of the sort options before data is loaded
         setButtonPressed(SortOptions.NONE);
@@ -420,7 +432,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String address = searchBarView.getText().toString();
 
         // read URL and update the list of establishments accordingly
-        readUrl(String.format(Locale.ENGLISH, SearchQueries.SIMPLE_SEARCH_URL, address, lastPageSize++));
+        readUrl(String.format(Locale.ENGLISH, SearchQueries.SIMPLE_SEARCH_NAME_URL, address, lastPageSize++));
     }
 
     /**
@@ -444,6 +456,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // search is location based
         isSearchLocalBased = true;
+        isSearchSimple = false;
+        wasSimpleExecuted = false;
+
         setButtonPressed(SortOptions.NONE);
 
         // query the API based on location
@@ -463,6 +478,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         lastPageSize = 1;
         setButtonPressed(SortOptions.NONE);
         isSearchLocalBased = false;
+        isSearchSimple = false;
+        wasSimpleExecuted = false;
 
         // start a new intent
         startActivity(new Intent(MainActivity.this, AdvancedSearchActivity.class));
@@ -495,7 +512,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new TextHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String response) {
-                        // turn of the gif
+                        // turn off the gif
                         switchLoadingGif();
 
                         // parse the response and update the list of values
@@ -525,6 +542,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // add new results to the list
         establishments.addAll(response.establishments);
+
+        if(isSearchSimple && establishments.size() != SearchQueries.DEFAULT_PAGE_SIZE &&
+                lastPageSize + lastPageSizeSimpleSearch < 10 && !wasSimpleExecuted){
+            Log.e("err","err");
+            wasSimpleExecuted = true;
+            // read URL and update the list of establishments accordingly
+            readUrl(String.format(Locale.ENGLISH, SearchQueries.SIMPLE_SEARCH_ADDRESS_URL,
+                    searchBarView.getText().toString(), lastPageSizeSimpleSearch++));
+            lastPageSize = lastPageSizeSimpleSearch;
+        }
+        // remove duplicates from the list in case some exists
+        Set<Establishments> hs = new HashSet<>(establishments);
+        establishments.clear();
+        establishments.addAll(hs);
+
         estAdpt.notifyDataSetChanged();
 
         // change the background image
@@ -540,12 +572,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             switchHygieneAndDateSortButton(false);
             switchLocationSortButton(false);
         }
-
-//        for (Establishments e : establishments)
-//            if (e.geocode.longitude == null || e.geocode.latitude == null) {
-////                readUrl(String.format(Locale.UK, SearchQueries.GEOCODE_POSTCODE_TO_LATLANG_URL, e.PostCode);
-//                Log.e("longs", String.valueOf(e.geocode.latitude) + String.valueOf(e.geocode.longitude));
-//            }
 
         // update the map
         onMapReady(map);
@@ -966,7 +992,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Make sure that limit is not exceeded and there are more results to fetch.
         if (establishments.size() % SearchQueries.DEFAULT_PAGE_SIZE != 0 ||
                 establishments.size() < SearchQueries.DEFAULT_PAGE_SIZE ||
-                lastPageSize > 10) return;
+                lastPageSize > 7) return;
 
         // update the last query with page size incremented
         LAST_QUERY = LAST_QUERY.substring(0, LAST_QUERY.lastIndexOf(PAGE_NUMBER));

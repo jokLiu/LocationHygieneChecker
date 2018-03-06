@@ -1,6 +1,8 @@
 package com.example.jokubas.restauranthygienechecker.JSON_classes;
 
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by jokubas on 25/02/18.
  *
@@ -32,6 +34,16 @@ public class Establishments {
     public String RightToReply;
     public double Distance;
     public boolean NewRatingPending;
+    
+    @Override
+    public boolean equals(Object e2){
+        return FHRSID==((Establishments)e2).FHRSID;
+    }
+
+    @Override
+    public int hashCode(){
+        return FHRSID;
+    }
 
     public class Scores {
         public  int Hygiene;
@@ -50,4 +62,5 @@ public class Establishments {
     public String toString(){
         return BusinessName;
     }
+
 }
